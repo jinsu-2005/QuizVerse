@@ -6,11 +6,10 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 // Lazy-loaded pages (speeds up initial load)
 const SignIn            = lazy(() => import("./routes/SignIn.jsx"));
 const RoleGate          = lazy(() => import("./routes/Auth/RoleGate.jsx"));
-const StudentDashboard  = lazy(() => import("./routes/student/Dashboard.jsx"));
-const TeacherDashboard  = lazy(() => import("./routes/teacher/Dashboard.jsx"));
-// Optional future pages:
-// const QuizPage       = lazy(() => import("./routes/quiz/QuizPage.jsx"));
-// const ResultPage     = lazy(() => import("./routes/quiz/ResultPage.jsx"));
+const StudentDashboard  = lazy(() => import("./routes/Student/Dashboard.jsx"));
+const TeacherDashboard  = lazy(() => import("./routes/Teacher/Dashboard.jsx"));
+const QuizPage       = lazy(() => import("./routes/quiz/QuizPage.jsx"));
+const ResultPage     = lazy(() => import("./routes/Results/ResultPage.jsx"));
 
 /* ---------------- Small loader ---------------- */
 function Loader() {
@@ -86,11 +85,10 @@ function Shell() {
           }
         />
 
-        {/* Optional future routes:
         <Route
           path="/quiz/:quizId"
           element={
-            <ProtectedRoute>
+            <ProtectedRoute role="student">
               <QuizPage />
             </ProtectedRoute>
           }
@@ -102,7 +100,7 @@ function Shell() {
               <ResultPage />
             </ProtectedRoute>
           }
-        /> */}
+        />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

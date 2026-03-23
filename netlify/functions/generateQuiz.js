@@ -8,7 +8,7 @@ const fetch = require('node-fetch');
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // *** USE THE USER-VERIFIED WORKING ENDPOINT ***
 const API_VERSION = 'v1beta';
-const GEMINI_MODEL_NAME = 'gemini-2.5-flash-preview-05-20';
+const GEMINI_MODEL_NAME = 'gemini-2.5-flash';
 // *** ***
 const API_TIMEOUT = 60000; // 60 seconds
 const MAX_QUESTIONS = 100; const MAX_OPTIONS = 10;
@@ -35,7 +35,7 @@ function extractJsonArray(text) {
         } else {
             // Attempt 3: Maybe the whole string IS the JSON (less likely but possible)
             jsonString = text.trim();
-             console.log("[DEBUG] Assuming entire trimmed text might be JSON.");
+            console.log("[DEBUG] Assuming entire trimmed text might be JSON.");
         }
     }
 
@@ -48,7 +48,7 @@ function extractJsonArray(text) {
         const parsed = JSON.parse(jsonString);
         if (!Array.isArray(parsed)) {
             console.error("[ERROR] Extracted JSON string was not an array:", jsonString.substring(0, 300));
-           throw new Error("Extracted JSON is not an array.");
+            throw new Error("Extracted JSON is not an array.");
         }
         // Basic validation: Check structure of the first item if array is not empty
         if (parsed.length > 0 && (typeof parsed[0] !== 'object' || !parsed[0].question || !Array.isArray(parsed[0].options) || !parsed[0].answer)) {
@@ -65,7 +65,7 @@ function extractJsonArray(text) {
 
 // --- Helper: Parse Multipart Form Data ---
 function parseMultipartForm(event) {
-     return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         console.log("[DEBUG] Starting multipart form parsing...");
         try {
             const busboy = Busboy({ headers: { 'content-type': event.headers['content-type'] || event.headers['Content-Type'] } });
@@ -82,7 +82,7 @@ function parseMultipartForm(event) {
             busboy.on('error', err => { console.error("[ERROR] Busboy parsing error:", err); reject(new Error(`Busboy parsing error: ${err.message}`)); });
             busboy.end(Buffer.from(event.body, 'base64'));
         } catch (err) { console.error("[ERROR] Busboy initialization error:", err); reject(new Error(`Busboy initialization error: ${err.message}`)); }
-     });
+    });
 }
 
 // --- Main Handler Function ---
@@ -118,8 +118,8 @@ exports.handler = async (event) => {
 
             // --- Simplified File Reading (No PDF) ---
             if (file.mimeType === 'application/pdf' || file.mimeType === 'text/markdown') {
-                 console.warn(`[WARN] Unsupported file type received: ${file.mimeType}. Rejecting.`);
-                 throw new Error(`Sorry, ${file.mimeType === 'application/pdf' ? 'PDF' : 'Markdown'} files are not supported. Please upload a plain text file (.txt, .csv).`);
+                console.warn(`[WARN] Unsupported file type received: ${file.mimeType}. Rejecting.`);
+                throw new Error(`Sorry, ${file.mimeType === 'application/pdf' ? 'PDF' : 'Markdown'} files are not supported. Please upload a plain text file (.txt, .csv).`);
             }
             console.log("[INFO] Reading file as text...");
             let fileContent = file.content.toString('utf-8');
@@ -127,8 +127,8 @@ exports.handler = async (event) => {
             // --- End Simplified File Reading ---
 
             if (fileContent.length > MAX_FILE_CONTENT_LENGTH) {
-                 console.warn(`[WARN] Truncating file content from ${fileContent.length} to ${MAX_FILE_CONTENT_LENGTH}.`);
-                 fileContent = fileContent.substring(0, MAX_FILE_CONTENT_LENGTH);
+                console.warn(`[WARN] Truncating file content from ${fileContent.length} to ${MAX_FILE_CONTENT_LENGTH}.`);
+                fileContent = fileContent.substring(0, MAX_FILE_CONTENT_LENGTH);
             }
 
             // --- *** ENHANCED PROMPT FOR FILE MODE *** ---
@@ -164,14 +164,14 @@ Generate the JSON array now based on the document and requirements.
             // --- *** END ENHANCED PROMPT *** ---
 
         } else { // Topic Mode
-             const body = JSON.parse(event.body || '{}');
-             if (!body.topic) throw new Error("Topic is missing in the request body.");
+            const body = JSON.parse(event.body || '{}');
+            if (!body.topic) throw new Error("Topic is missing in the request body.");
 
-             // Validate and Clamp User Inputs
-             numQuestions = Math.max(MIN_QUESTIONS, Math.min(MAX_QUESTIONS, parseInt(body.numQuestions, 10) || 5));
-             numOptions = Math.max(MIN_OPTIONS, Math.min(MAX_OPTIONS, parseInt(body.numOptions, 10) || 4));
-             difficulty = ['Easy', 'Moderate', 'Hard'].includes(body.difficulty) ? body.difficulty : 'Moderate';
-             console.log(`[INFO] Topic Params: Topic=${body.topic}, Qs=${numQuestions}, Opts=${numOptions}, Diff=${difficulty}`);
+            // Validate and Clamp User Inputs
+            numQuestions = Math.max(MIN_QUESTIONS, Math.min(MAX_QUESTIONS, parseInt(body.numQuestions, 10) || 5));
+            numOptions = Math.max(MIN_OPTIONS, Math.min(MAX_OPTIONS, parseInt(body.numOptions, 10) || 4));
+            difficulty = ['Easy', 'Moderate', 'Hard'].includes(body.difficulty) ? body.difficulty : 'Moderate';
+            console.log(`[INFO] Topic Params: Topic=${body.topic}, Qs=${numQuestions}, Opts=${numOptions}, Diff=${difficulty}`);
 
             // --- *** ENHANCED PROMPT FOR TOPIC MODE *** ---
             prompt = `
@@ -236,8 +236,8 @@ Generate the JSON array now based on the topic and requirements.
         // Directly access the expected text part from the JSON response
         const aiResponseText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!aiResponseText) {
-             console.error("[ERROR] Invalid Gemini response structure (missing text part):", JSON.stringify(result).substring(0, 500));
-             throw new Error("AI returned an unexpected response structure.");
+            console.error("[ERROR] Invalid Gemini response structure (missing text part):", JSON.stringify(result).substring(0, 500));
+            throw new Error("AI returned an unexpected response structure.");
         }
 
         // Use robust extraction just in case the model ignored the JSON mode instruction

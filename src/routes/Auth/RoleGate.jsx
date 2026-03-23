@@ -124,7 +124,7 @@ export default function RoleGate() {
               defaultPassword: TEACHER_VERIFICATION_PHRASE,
               regNo: null,
               academicYear: null,
-              department: null,
+              department: form.department || null, // Allow teachers to save department too
             };
 
       await setDoc(doc(db, "users", fbUser.uid), { ...base, ...extra }, { merge: true });
@@ -245,6 +245,13 @@ export default function RoleGate() {
                 </div>
               ) : (
                 <div className="mt-8">
+                  <SelectFieldObject
+                    label="Department"
+                    options={DEPARTMENTS}
+                    value={form.department}
+                    onChange={(v) => setForm({ ...form, department: v })}
+                    className="md:col-span-2"
+                  />
                   <InputField
                     label="Teacher Verification"
                     placeholder='Type exactly: "i am a teacher"'

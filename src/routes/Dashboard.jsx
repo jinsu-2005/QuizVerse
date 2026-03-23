@@ -32,13 +32,12 @@ const DEPARTMENTS = [
   { label: "Artificial Intelligence and Machine Learning (AIML)", value: "AIML" },
 ];
 
-
-
-
 const ACADEMIC_YEARS = ["2022 - 2026", "2023 - 2027", "2024 - 2028", "2025 - 2029"];
+
 const MIN_Q = 1, MAX_Q = 100;
 const MIN_OPT = 2, MAX_OPT = 10;
-const MIN_ATTEMPTS = 0, MAX_ATTEMPTS = 5;
+
+/* ------------------------------- MAIN SCREEN ------------------------------ */
 
 export default function TeacherDashboard() {
   // 1. Get the *initial* profile from the hook
@@ -72,7 +71,6 @@ export default function TeacherDashboard() {
 
   // Mode switching
   const [createMode, setCreateMode] = useState("custom"); // "ai" or "custom"
-  const [maxAttempts, setMaxAttempts] = useState(0); // 0 = Unlimited
 
   // AI Quiz Generation state
   const [aiMode, setAiMode] = useState("topic"); // 'topic' | 'file'
@@ -84,8 +82,6 @@ export default function TeacherDashboard() {
   const [difficulty, setDifficulty] = useState("Moderate");
   const [timerMode, setTimerMode] = useState("off"); // 'off' | 'perQuestion' | 'total'
   const [timeValue, setTimeValue] = useState(30); // seconds (perQ) or minutes (total)
-
-
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState("");
   const [aiQuiz, setAiQuiz] = useState(null); // {questions: [...], meta:{...}}
@@ -116,10 +112,6 @@ export default function TeacherDashboard() {
   const [filterDept, setFilterDept] = useState("");
   const [filterYear, setFilterYear] = useState("");
 
-  // Edit Requests state
-  const [requests, setRequests] = useState([]);
-  const [busyReqs, setBusyReqs] = useState(false);
-
   // Profile drawer
   const [openProfile, setOpenProfile] = useState(false);
 
@@ -138,6 +130,7 @@ export default function TeacherDashboard() {
       uid: fbUser?.uid || "",
       institute: profile?.institute || null,
       department: profile?.department || null,
+      academicYear: profile?.academicYear || null,
       name: profile?.name || null,
       dob: profile?.dob || null,
       gender: profile?.gender || null,
@@ -182,69 +175,6 @@ export default function TeacherDashboard() {
     );
     return () => unsub();
   }, [fbUser]);
-
-  // Subscribe to pending edit requests for this teacher's department
-  useEffect(() => {
-    if (!profile?.department) {
-      setRequests([]);
-      setBusyReqs(false);
-      return;
-    }
-    setBusyReqs(true);
-
-    // Try compound query first; if index missing, fall back to single-field query + client filter
-    const tryCompoundQuery = () => {
-      const rRef = query(
-        collection(db, "editRequests"),
-        where("department", "==", profile.department),
-        where("status", "==", "pending")
-      );
-      return onSnapshot(
-        rRef,
-        (ss) => {
-          setRequests(
-            ss.docs
-              .map((d) => ({ id: d.id, ...d.data() }))
-              .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
-          );
-          setBusyReqs(false);
-        },
-        (e) => {
-          console.warn("Compound query failed (likely missing index), falling back:", e.message);
-          // Fallback: query by status only, then filter client-side
-          fallbackQuery();
-        }
-      );
-    };
-
-    const fallbackQuery = () => {
-      const rRef = query(
-        collection(db, "editRequests"),
-        where("status", "==", "pending")
-      );
-      return onSnapshot(
-        rRef,
-        (ss) => {
-          const all = ss.docs.map((d) => ({ id: d.id, ...d.data() }));
-          const filtered = all.filter((r) => r.department === profile.department);
-          setRequests(
-            filtered.sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0))
-          );
-          setBusyReqs(false);
-        },
-        (e) => {
-          console.error("Requests fallback error:", e);
-          if (e.code?.toString().includes("permission")) {
-            console.error("🔴 FIRESTORE PERMISSIONS ERROR: Your Security Rules are blocking 'editRequests'. Ensure teachers have read access in Firebase Console.");
-          }
-          setBusyReqs(false);
-        }
-      );
-    };
-
-    const unsub = tryCompoundQuery();
-    return () => { if (typeof unsub === "function") unsub(); };
-  }, [profile?.department]);
 
   // Derived: filtered quizzes
   const filtered = useMemo(() => {
@@ -402,7 +332,6 @@ export default function TeacherDashboard() {
         createdByName: teacherMeta.displayName,
         createdAt: serverTimestamp(),
         sourceMode: aiQuiz.meta.sourceMode,
-        maxAttempts: Number(maxAttempts) || 0,
         questions: aiQuiz.questions.map(q => ({
           question: q.question.trim(),
           options: q.options.map(o => o.trim()),
@@ -410,12 +339,6 @@ export default function TeacherDashboard() {
           explanation: q.explanation.trim(),
         })),
       };
-
-      console.log("[DEBUG] Publishing quiz with metadata:", {
-        title: payload.title,
-        dept: payload.department,
-        year: payload.academicYear
-      });
 
       const ref = await addDoc(collection(db, "quizzes"), payload);
       await setDoc(doc(db, "users", teacherMeta.uid, "teacherQuizzes", ref.id), {
@@ -486,17 +409,13 @@ export default function TeacherDashboard() {
 
     setBusyCreate(true);
     try {
-      const timerSettings = { mode: timerMode, time: timeValue };
       const payload = {
         title: form.title.trim(),
         description: form.description.trim() || "",
-        createdBy: teacherMeta.uid,
-        createdByName: teacherMeta.displayName,
+        createdBy: fbUser.uid,
+        createdByName: auth.currentUser?.displayName || profile?.name || null,
         department: form.department,
         academicYear: form.academicYear,
-        institute: teacherMeta.institute || null,
-        difficulty: difficulty,
-        timer: timerSettings,
         questions: questions.map((q) => ({
           question: q.question.trim(),
           options: q.options.map((o) => o.trim()),
@@ -505,28 +424,12 @@ export default function TeacherDashboard() {
         })),
         createdAt: serverTimestamp(),
         sourceMode: "custom",
-        maxAttempts: Number(maxAttempts) || 0,
       };
 
-      console.log("[DEBUG] Custom quiz creating with:", {
-        title: payload.title,
-        dept: payload.department,
-        year: payload.academicYear
-      });
-
-      const ref = await addDoc(collection(db, "quizzes"), payload);
-      await setDoc(doc(db, "users", teacherMeta.uid, "teacherQuizzes", ref.id), {
-        quizId: ref.id,
-        title: payload.title,
-        createdAt: serverTimestamp(),
-        department: payload.department,
-        academicYear: payload.academicYear,
-      });
-
+      await addDoc(collection(db, "quizzes"), payload);
       setToast({ type: "ok", msg: "Quiz created." });
       // reset minimal
       setForm({ title: "", description: "", department: "", academicYear: "" });
-      setMaxAttempts(0);
       setQuestions([
         { question: "", options: ["", "", "", ""], answerIndex: 0, explanation: "" },
       ]);
@@ -587,16 +490,6 @@ export default function TeacherDashboard() {
         editingId: quiz.id, // Mark as editing existing quiz
       },
     });
-
-    // --- FIX 1 of 2: Populate form state when editing ---
-    // Populate the AI form with the quiz's current data so it can be edited.
-    setTopic(quiz.title);
-    setDifficulty(quiz.difficulty || "Moderate");
-    setTimerMode(quiz.timer?.mode || "off");
-    setTimeValue(quiz.timer?.time || (quiz.timer?.mode === "total" ? 10 : 30));
-    setMaxAttempts(quiz.maxAttempts || 0);
-    // --- END OF FIX ---
-
     setCreateMode("ai"); // Switch to AI mode for editing
   };
 
@@ -608,26 +501,17 @@ export default function TeacherDashboard() {
 
     setPublishing(true);
     try {
-      // --- FIX 2 of 2: Read from form state when updating ---
-      // The payload must read from the *current form state* (topic, difficulty, etc.)
-      // not just the meta object, which might be stale.
-      const timerSettings = { mode: timerMode, time: timeValue };
-
       const payload = {
-        title: topic.trim() || "Untitled Quiz", // Get from form state
+        title: aiQuiz.meta.topic || "Untitled Quiz",
         description: `Updated quiz • ${aiQuiz.questions.length} questions`,
-        difficulty: difficulty, // Get from form state
-        timer: timerSettings, // Get from form state
         questions: aiQuiz.questions.map(q => ({
           question: q.question.trim(),
           options: q.options.map(o => o.trim()),
           answer: q.options[q.answerIndex]?.trim() ?? "",
           explanation: q.explanation.trim(),
         })),
-        maxAttempts: Number(maxAttempts) || 0,
         updatedAt: serverTimestamp(),
       };
-      // --- END OF FIX ---
 
       await updateDoc(doc(db, "quizzes", aiQuiz.meta.editingId), payload);
       alert("Quiz updated successfully!");
@@ -648,26 +532,22 @@ export default function TeacherDashboard() {
         onOpenProfile={() => setOpenProfile(true)}
       />
 
-      {/* Mode Selection Tabs */}
-      <div className="mt-8 border-b border-gray-800">
-        <div className="flex gap-6 overflow-x-auto hide-scrollbar">
+      {/* Mode Selection */}
+      <div className="mt-6">
+        <div className="flex flex-wrap gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1 w-full sm:w-auto">
           {[
             { key: "ai", label: "AI Quiz Generator" },
-            { key: "custom", label: "Custom Quiz Creator" },
-            { key: "requests", label: `Student Requests ${requests.length > 0 ? `(${requests.length})` : ""}` }
+            { key: "custom", label: "Custom Quiz Creator" }
           ].map((mode) => (
             <button
               key={mode.key}
               onClick={() => setCreateMode(mode.key)}
-              className={`relative pb-4 text-sm font-bold transition-colors whitespace-nowrap ${createMode === mode.key
-                ? "text-indigo-400"
-                : "text-gray-400 hover:text-gray-200"
+              className={`px-6 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${createMode === mode.key
+                  ? "bg-blue-600 text-white shadow-lg"
+                  : "text-gray-300 hover:bg-gray-700"
                 }`}
             >
               {mode.label}
-              {createMode === mode.key && (
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-indigo-500 rounded-t-full shadow-[0_0_8px_rgba(99,102,241,0.6)] animate-[fadeIn_0.3s_ease]" />
-              )}
             </button>
           ))}
         </div>
@@ -675,12 +555,9 @@ export default function TeacherDashboard() {
 
       {/* Main Content Grid */}
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
-        {/* Left Column - Creation Panel OR Requests */}
+        {/* Left Column - Creation Panel */}
         <div>
-          {createMode === "requests" ? (
-            <StudentRequestsSection requests={requests} busyReqs={busyReqs} />
-          ) : createMode === "ai" ? (
-
+          {createMode === "ai" ? (
             <AiQuizSection
               aiMode={aiMode}
               setAiMode={setAiMode}
@@ -702,8 +579,6 @@ export default function TeacherDashboard() {
               setTimerMode={setTimerMode}
               timeValue={timeValue}
               setTimeValue={setTimeValue}
-              maxAttempts={maxAttempts}
-              setMaxAttempts={setMaxAttempts}
               aiLoading={aiLoading}
               aiError={aiError}
               generateWithAI={generateWithAI}
@@ -711,7 +586,6 @@ export default function TeacherDashboard() {
               clampedNumOpt={clampedNumOpt}
             />
           ) : (
-
             <CustomQuizSection
               form={form}
               setForm={setForm}
@@ -723,16 +597,7 @@ export default function TeacherDashboard() {
               createQuiz={createQuiz}
               busyCreate={busyCreate}
               profile={profile}
-              difficulty={difficulty}
-              setDifficulty={setDifficulty}
-              timerMode={timerMode}
-              setTimerMode={setTimerMode}
-              timeValue={timeValue}
-              setTimeValue={setTimeValue}
-              maxAttempts={maxAttempts}
-              setMaxAttempts={setMaxAttempts}
             />
-
           )}
         </div>
 
@@ -771,12 +636,9 @@ export default function TeacherDashboard() {
       {/* Toast */}
       {toast.msg && (
         <div
-          className={`fixed top-6 right-4 z-50 flex items-center gap-3 rounded-2xl px-5 py-3.5 text-sm font-semibold shadow-2xl backdrop-blur-xl border ${toast.type === "error"
-            ? "bg-red-950/80 border-red-800/50 text-red-200 shadow-red-900/30"
-            : "bg-green-950/80 border-green-800/50 text-green-200 shadow-green-900/30"
-            } animate-[fadeIn_300ms_ease]`}
+          className={`fixed top-6 right-4 z-50 rounded-lg px-4 py-3 text-sm shadow-lg ${toast.type === "error" ? "bg-red-600" : "bg-green-600"
+            } text-white animate-[fadeIn_300ms_ease]`}
         >
-          <span className={`w-2 h-2 rounded-full ${toast.type === "error" ? "bg-red-400" : "bg-green-400"}`} />
           {toast.msg}
         </div>
       )}
@@ -798,7 +660,6 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
     dob: initial?.dob || "",
     gender: initial?.gender || "",
     institute: initial?.institute || "",
-    department: initial?.department || "",
     photoURL: initial?.photoURL || auth.currentUser?.photoURL || "",
   }));
   const [saving, setSaving] = useState(false);
@@ -812,7 +673,6 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
       dob: initial?.dob || "",
       gender: initial?.gender || "",
       institute: initial?.institute || "",
-      department: initial?.department || "",
       photoURL: initial?.photoURL || auth.currentUser?.photoURL || "",
     });
   }, [open, initial]);
@@ -861,7 +721,6 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
           dob: form.dob || null,
           gender: form.gender || null,
           institute: form.institute || null,
-          department: form.department || null,
           photoURL: form.photoURL || null, // Saves data: OR https:
           email: auth.currentUser?.email || null,
         },
@@ -916,10 +775,10 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h3 className="text-lg font-bold">Your Profile</h3>
+          <h3 className="text-lg font-semibold">Your Profile</h3>
           <button
             onClick={onClose}
-            className="rounded-xl border border-gray-700 bg-gray-800 px-4 py-2 text-sm font-semibold hover:bg-gray-700 transition"
+            className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 hover:bg-gray-700 transition"
           >
             Close
           </button>
@@ -939,13 +798,13 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => fileRef.current?.click()}
-                    className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 text-sm font-bold transition shadow-lg shadow-indigo-900/20"
+                    className="rounded-lg bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 text-sm transition"
                   >
                     {uploading ? "Uploading…" : "Upload Photo"}
                   </button>
                   <button
                     onClick={useGooglePhoto}
-                    className="rounded-xl border border-gray-700 bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 text-sm font-semibold transition"
+                    className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 text-sm transition"
                   >
                     Use Google photo
                   </button>
@@ -983,27 +842,20 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
                 onChange={(v) => setForm({ ...form, institute: v })}
                 placeholder="e.g., Ponjesly College of Engineering"
               />
-              <Select
-                label="Department"
-                value={form.department}
-                onChange={(v) => setForm({ ...form, department: v })}
-                options={DEPARTMENTS.map((d) => ({ value: d.value, text: d.label }))}
-              />
 
-
-              <div className="pt-4 flex justify-end gap-3">
+              <div className="pt-2 flex justify-end gap-2">
                 <button
                   onClick={onClose}
-                  className="rounded-xl border border-gray-700 bg-gray-800 px-5 py-2.5 text-sm font-bold text-gray-200 hover:bg-gray-700 transition"
+                  className="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition"
                 >
                   Cancel
                 </button>
                 <button
                   disabled={saving}
                   onClick={save}
-                  className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${saving
-                    ? "bg-gray-700 text-gray-400"
-                    : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20"
+                  className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${saving
+                      ? "bg-gray-600 text-gray-300"
+                      : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-700/30"
                     }`}
                 >
                   {saving ? "Saving…" : "Save Changes"}
@@ -1023,23 +875,21 @@ function AiQuizSection({
   aiMode, setAiMode, topic, setTopic, file, setFile, onPickFile, fileRef,
   instruction, setInstruction, numQuestions, setNumQuestions, numOptions, setNumOptions,
   difficulty, setDifficulty, timerMode, setTimerMode, timeValue, setTimeValue,
-  maxAttempts, setMaxAttempts, aiLoading, aiError, generateWithAI, clampedNumQ, clampedNumOpt
+  aiLoading, aiError, generateWithAI, clampedNumQ, clampedNumOpt
 }) {
   return (
     <Section title="AI Quiz Forge">
-      <div className="relative overflow-hidden rounded-3xl border border-gray-800 bg-gray-900/60 backdrop-blur-2xl p-6 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_8px_32px_-12px_rgba(79,70,229,0.25)] flex flex-col gap-6">
-        <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-indigo-600/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-purple-600/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-6">
+        <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-blue-600/20 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl" />
 
-        {/* Mode Switch (Segmented Control) */}
-        <div className="relative z-10 flex p-1.5 bg-gray-900/80 border border-gray-700/60 rounded-2xl w-full">
+        {/* Mode Switch */}
+        <div className="flex flex-wrap gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1 w-full sm:w-auto mb-5">
           {["topic", "file"].map((m) => (
             <button
               key={m}
               onClick={() => setAiMode(m)}
-              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${aiMode === m
-                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/30"
-                : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${aiMode === m ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-700"
                 }`}
             >
               {m === "topic" ? "From Topic" : "From File"}
@@ -1048,90 +898,74 @@ function AiQuizSection({
         </div>
 
         {/* Inputs */}
-        <form onSubmit={generateWithAI} className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <form onSubmit={generateWithAI} className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div className="lg:col-span-2 space-y-5">
             {aiMode === "topic" ? (
               <div>
-                <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Topic</label>
+                <label className="mb-2 block text-xs font-medium text-gray-300">Topic</label>
                 <input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., Data Structures (Stacks, Queues)"
-                  className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100"
+                  className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             ) : (
-              <div className="space-y-4">
-                <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Upload .txt or .csv</label>
+              <div className="space-y-3">
+                <label className="mb-2 block text-xs font-medium text-gray-300">Upload .txt or .csv</label>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="w-full cursor-pointer rounded-2xl border-2 border-dashed border-gray-700/80 bg-gray-800/40 px-5 py-8 text-center hover:border-indigo-500 hover:bg-gray-800/60 transition-all group"
+                  className="w-full cursor-pointer rounded-xl border-2 border-dashed border-gray-700 bg-gray-800/60 px-4 py-6 text-center hover:border-blue-500 transition"
                 >
-                  <div className="text-sm font-semibold text-gray-300 group-hover:text-indigo-300">{file ? file.name : "Click to choose a file"}</div>
-                  <div className="mt-1 text-xs text-gray-500">Max few hundred KB recommended</div>
+                  <div className="text-sm text-gray-400">{file ? file.name : "Click to choose a file"}</div>
+                  <div className="text-[11px] text-gray-500">Max few hundred KB recommended</div>
                 </div>
                 <input ref={fileRef} type="file" className="hidden" accept=".txt,.csv" onChange={onPickFile} />
                 <div>
-                  <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Instruction</label>
+                  <label className="mb-2 block text-xs font-medium text-gray-300">Instruction</label>
                   <textarea
                     rows={3}
                     value={instruction}
                     onChange={(e) => setInstruction(e.target.value)}
                     placeholder="E.g., Create 8 MCQs focusing on key definitions and examples."
-                    className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100"
+                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
             )}
 
-            {/* Settings Layout Refactor */}
-            <div className="flex flex-col gap-6">
-              {/* Row 1: Core Params */}
-              <div className="grid grid-cols-2 gap-5">
-                <NumberField
-                  label="Questions (1–100)"
-                  value={numQuestions}
-                  onChange={(v) => setNumQuestions(v)}
-                  onBlur={() => setNumQuestions(clampedNumQ(numQuestions))}
-                  min={1} max={100}
-                />
-                <NumberField
-                  label="Options (2–10)"
-                  value={numOptions}
-                  onChange={(v) => setNumOptions(v)}
-                  onBlur={() => setNumOptions(clampedNumOpt(numOptions))}
-                  min={2} max={10}
-                />
-              </div>
-
-              {/* Row 2: Logic - Full Width */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <NumberField
+                label="Questions (1–100)"
+                value={numQuestions}
+                onChange={(v) => setNumQuestions(v)} // Set the raw value
+                onBlur={() => setNumQuestions(clampedNumQ(numQuestions))} // Clamp on blur
+                min={1} max={100}
+              />
+              <NumberField
+                label="Options per Question (2–10)"
+                value={numOptions}
+                onChange={(v) => setNumOptions(v)} // Set the raw value
+                onBlur={() => setNumOptions(clampedNumOpt(numOptions))} // Clamp on blur
+                min={2} max={10}
+              />
               <Select
                 label="Difficulty"
                 value={difficulty}
                 onChange={setDifficulty}
                 options={["Easy", "Moderate", "Hard"]}
               />
-
-              {/* Row 3: Limit - Full Width */}
-              <NumberField
-                label="Limit Attempts (0 - 5)"
-                value={maxAttempts}
-                onChange={(v) => setMaxAttempts(v)}
-                onBlur={(v) => setMaxAttempts(Math.min(MAX_ATTEMPTS, Math.max(MIN_ATTEMPTS, Number(maxAttempts || 0))))} min={MIN_ATTEMPTS} max={MAX_ATTEMPTS}
-              />
             </div>
 
-            <div className="mt-2">
-              <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Timer</label>
-              <div className="grid grid-cols-3 gap-1.5 bg-gray-900/80 border border-gray-700/60 rounded-2xl p-1.5 w-full">
+            <div>
+              <label className="mb-2 block text-xs font-medium text-gray-300">Timer</label>
+              <div className="grid grid-cols-3 gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1">
                 {["off", "perQuestion", "total"].map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTimerMode(t)}
-                    className={`py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${timerMode === t
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/30"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
+                    className={`py-2 text-sm font-semibold rounded-md transition-colors ${timerMode === t ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-700"
                       }`}
                   >
                     {t === "perQuestion" ? "Per Question" : t === "total" ? "Total Quiz" : "Off"}
@@ -1140,66 +974,54 @@ function AiQuizSection({
               </div>
 
               {timerMode === "perQuestion" && (
-                <div className="mt-4">
-                  <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Seconds per Question (≥ 10)</label>
+                <div className="mt-2">
+                  <label className="mb-2 block text-xs font-medium text-gray-300">Seconds per Question (≥ 10)</label>
                   <input
                     type="number"
                     min={10}
                     value={timeValue}
                     onChange={(e) => setTimeValue(Math.max(10, Number(e.target.value)))}
-                    className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100"
+                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
               {timerMode === "total" && (
-                <div className="mt-4">
-                  <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Total Minutes (≥ 1)</label>
+                <div className="mt-2">
+                  <label className="mb-2 block text-xs font-medium text-gray-300">Total Minutes (≥ 1)</label>
                   <input
                     type="number"
                     min={1}
                     value={timeValue}
                     onChange={(e) => setTimeValue(Math.max(1, Number(e.target.value)))}
-                    className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100"
+                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
             </div>
           </div>
 
-          <div className="lg:col-span-1 h-full">
-            <div className="h-full rounded-3xl border border-gray-800/60 bg-gradient-to-br from-gray-900/80 to-indigo-950/20 p-6 flex flex-col justify-center items-center text-center gap-4 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-2xl rounded-full pointer-events-none" />
-
-              <div className="text-sm font-medium text-gray-400">AI will create:</div>
-              <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-purple-400 tracking-tight">
-                {numQuestions}
+          <div className="lg:col-span-1">
+            <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5 flex flex-col gap-3">
+              <div className="text-sm text-gray-300">AI will create:</div>
+              <div className="text-3xl font-extrabold">
+                {numQuestions}<span className="text-gray-400 text-base ml-1">questions</span>
               </div>
-              <div className="text-sm font-semibold text-gray-300">
-                questions <span className="text-gray-500 font-normal">with {numOptions} options each</span>
+              <div className="text-sm text-gray-400">with {numOptions} options each</div>
+              <div className="text-sm text-gray-400">Difficulty: <span className="text-gray-200 font-semibold">{difficulty}</span></div>
+              <div className="text-xs text-gray-500">
+                Timer: {timerMode === "off" ? "Off" :
+                  timerMode === "perQuestion" ? `${timeValue}s / question` : `${timeValue}m total`
+                }
               </div>
-
-              <div className="mt-2 w-full h-px bg-gray-800/60" />
-
-              <div className="w-full flex justify-between items-center text-sm px-2">
-                <span className="text-gray-500">Difficulty:</span>
-                <span className="font-bold text-gray-200">{difficulty}</span>
-              </div>
-              <div className="w-full flex justify-between items-center text-sm px-2">
-                <span className="text-gray-500">Timer:</span>
-                <span className="font-bold text-gray-200">
-                  {timerMode === "off" ? "Off" : timerMode === "perQuestion" ? `${timeValue}s / Q` : `${timeValue}m Total`}
-                </span>
-              </div>
-
               {aiError && (
-                <div className="mt-2 w-full rounded-xl border border-red-900/50 bg-red-950/40 p-3 text-xs text-red-300 text-left">
+                <div className="mt-2 rounded-lg border border-red-800 bg-red-900/40 p-3 text-sm text-red-200">
                   {aiError}
                 </div>
               )}
               <button
                 type="submit"
                 disabled={aiLoading}
-                className="mt-2 w-full sm:w-auto rounded-xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20 text-white px-5 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:bg-gray-700 disabled:text-gray-400 disabled:scale-100 disabled:shadow-none"
+                className="mt-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 text-sm font-semibold transition disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 {aiLoading ? "Generating…" : "Generate with AI"}
               </button>
@@ -1215,23 +1037,19 @@ function AiQuizSection({
 
 function CustomQuizSection({
   form, setForm, questions, addQuestion, removeQuestion,
-  updateQuestion, updateOption, createQuiz, busyCreate, profile,
-  difficulty, setDifficulty, timerMode, setTimerMode, timeValue, setTimeValue,
-  maxAttempts, setMaxAttempts
+  updateQuestion, updateOption, createQuiz, busyCreate, profile
 }) {
   return (
     <Section title="Create Custom Quiz">
-      <div className="relative overflow-hidden rounded-3xl border border-gray-800 bg-gray-900/60 backdrop-blur-2xl p-6 transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_8px_32px_-12px_rgba(79,70,229,0.25)] flex flex-col gap-6">
-        <div className="pointer-events-none absolute -top-20 -left-20 h-56 w-56 rounded-full bg-indigo-600/10 blur-3xl" />
-
+      <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5">
         {/* Top badges */}
-        <div className="relative z-10 flex flex-wrap items-center gap-2">
+        <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge>{profile?.institute || "Your Institute"}</Badge>
           <Badge>Teacher</Badge>
         </div>
 
         {/* Form */}
-        <div className="relative z-10 grid gap-6">
+        <div className="grid gap-4">
           <Field
             label="Title"
             value={form.title}
@@ -1259,56 +1077,6 @@ function CustomQuizSection({
               onChange={(v) => setForm({ ...form, academicYear: v })}
               options={ACADEMIC_YEARS.map((y) => ({ value: y, text: y }))}
             />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-
-            <Select
-              label="Difficulty"
-              value={difficulty}
-              onChange={setDifficulty}
-              options={["Easy", "Moderate", "Hard"]}
-            />
-            <NumberField
-              label="Limit Attempts (0 - 5)"
-              value={maxAttempts}
-              onChange={(v) => setMaxAttempts(v)}
-              onBlur={(v) => setMaxAttempts(Math.min(MAX_ATTEMPTS, Math.max(MIN_ATTEMPTS, Number(maxAttempts || 0))))} min={MIN_ATTEMPTS} max={MAX_ATTEMPTS}
-            />
-
-            <div>
-              <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Timer</label>
-              <div className="grid grid-cols-3 gap-1.5 bg-gray-900/80 border border-gray-700/60 rounded-2xl p-1.5 w-full">
-                {["off", "perQuestion", "total"].map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    onClick={() => setTimerMode(t)}
-                    className={`py-2.5 text-sm font-bold rounded-xl transition-all duration-300 ${timerMode === t
-                      ? "bg-indigo-600 text-white shadow-md shadow-indigo-900/30"
-                      : "text-gray-400 hover:text-gray-200 hover:bg-gray-800/50"
-                      }`}
-                  >
-                    {t === "perQuestion" ? "Per Q" : t === "total" ? "Total" : "Off"}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {(timerMode === "perQuestion" || timerMode === "total") && (
-              <div className="sm:col-span-2">
-                <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">
-                  {timerMode === "perQuestion" ? "Seconds per Question (≥ 10)" : "Total Minutes (≥ 1)"}
-                </label>
-                <input
-                  type="number"
-                  min={timerMode === "perQuestion" ? 10 : 1}
-                  value={timeValue}
-                  onChange={(e) => setTimeValue(Math.max(timerMode === "perQuestion" ? 10 : 1, Number(e.target.value)))}
-                  className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100"
-                />
-              </div>
-            )}
           </div>
 
           {/* Questions */}
@@ -1354,8 +1122,8 @@ function CustomQuizSection({
                         type="button"
                         onClick={() => updateQuestion(i, { answerIndex: oi })}
                         className={`absolute right-2 top-8 rounded-md px-2 py-1 text-xs font-semibold border ${q.answerIndex === oi
-                          ? "bg-emerald-600/80 border-emerald-500 text-white"
-                          : "bg-gray-800/70 border-gray-700 text-gray-300 hover:bg-gray-700"
+                            ? "bg-emerald-600/80 border-emerald-500 text-white"
+                            : "bg-gray-800/70 border-gray-700 text-gray-300 hover:bg-gray-700"
                           }`}
                         title="Mark as correct"
                       >
@@ -1366,14 +1134,12 @@ function CustomQuizSection({
                 </div>
 
                 {/* Explanation */}
-                <div className="mt-4">
-                  <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300">Explanation (shown after answer)</label>
-                  <textarea
-                    rows={2}
+                <div className="mt-3">
+                  <Field
+                    label="Explanation (shown after answer)"
                     value={q.explanation}
-                    onChange={(e) => updateQuestion(i, { explanation: e.target.value })}
+                    onChange={(v) => updateQuestion(i, { explanation: v })}
                     placeholder="Why this answer is correct…"
-                    className="w-full rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 py-3.5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100 max-h-40 min-h-[80px]"
                   />
                 </div>
               </div>
@@ -1391,9 +1157,9 @@ function CustomQuizSection({
               <button
                 onClick={createQuiz}
                 disabled={busyCreate}
-                className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] ${busyCreate
-                  ? "bg-gray-700 text-gray-400"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/20"
+                className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${busyCreate
+                    ? "bg-gray-600 text-gray-300"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-700/30"
                   }`}
               >
                 {busyCreate ? "Creating…" : "Create Quiz"}
@@ -1413,50 +1179,41 @@ function QuizListSection({
   busyList, filtered, onDelete, onDuplicate, onEdit
 }) {
   return (
-    <div className="rounded-2xl border border-gray-800/80 bg-gray-900/60 backdrop-blur-xl p-5">
+    <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5">
       {/* Filters */}
-      <div className="flex flex-col gap-3">
+      <div className="grid md:grid-cols-5 gap-3">
         <InputSmall
-          placeholder="Search quizzes..."
+          placeholder="Search title or description…"
           value={search}
           onChange={setSearch}
         />
-        <div className="flex flex-wrap items-center gap-3">
-          <SelectSmall
-            value={filterDept}
-            onChange={setFilterDept}
-            placeholder="All Departments"
-            options={[{ value: "", text: "All Departments" }].concat(
-              DEPARTMENTS.map((d) => ({ value: d.value, text: d.label }))
-            )}
-          />
-          <SelectSmall
-            value={filterYear}
-            onChange={setFilterYear}
-            placeholder="All Years"
-            options={[{ value: "", text: "All Years" }].concat(
-              ACADEMIC_YEARS.map((y) => ({ value: y, text: y }))
-            )}
-          />
-          <button
-            onClick={() => {
-              setFilterDept("");
-              setFilterYear("");
-              setSearch("");
-            }}
-            className="h-[44px] rounded-xl px-5 bg-gray-800 hover:bg-gray-700 text-sm font-semibold border border-gray-700 transition-colors text-gray-300"
-          >
-            Reset
-          </button>
-        </div>
+        <SelectSmall
+          value={filterDept}
+          onChange={setFilterDept}
+          placeholder="All Departments"
+          options={[{ value: "", text: "All Departments" }].concat(
+            DEPARTMENTS.map((d) => ({ value: d.value, text: d.label }))
+          )}
+        />
+        <SelectSmall
+          value={filterYear}
+          onChange={setFilterYear}
+          placeholder="All Years"
+          options={[{ value: "", text: "All Years" }].concat(
+            ACADEMIC_YEARS.map((y) => ({ value: y, text: y }))
+          )}
+        />
+        <button
+          onClick={() => {
+            setFilterDept("");
+            setFilterYear("");
+            setSearch("");
+          }}
+          className="rounded-lg bg-gray-800 hover:bg-gray-700 text-sm border border-gray-700"
+        >
+          Reset
+        </button>
       </div>
-
-      {/* Quiz count */}
-      {!busyList && filtered.length > 0 && (
-        <div className="mt-3 text-xs font-bold uppercase tracking-wider text-gray-500">
-          {filtered.length} Quiz{filtered.length !== 1 ? "zes" : ""}
-        </div>
-      )}
 
       {/* List */}
       <div className="mt-4 grid gap-4">
@@ -1466,7 +1223,7 @@ function QuizListSection({
             <RowSkeleton />
           </>
         ) : filtered.length === 0 ? (
-          <Empty text="You haven't created any quizzes yet. Use the AI Quiz Generator or Custom Quiz Creator to get started!" />
+          <Empty text="You haven't created any quizzes yet." />
         ) : (
           filtered.map((qz) => (
             <QuizRow
@@ -1539,8 +1296,8 @@ function AiQuizPreviewSection({
                     <button
                       onClick={() => updateAiQuestion(i, { answerIndex: oi })}
                       className={`rounded-md px-2 py-1 text-xs border ${q.answerIndex === oi
-                        ? "bg-green-700/40 border-green-500 text-green-200"
-                        : "bg-gray-800/60 border-gray-700 text-gray-300 hover:bg-gray-700"
+                          ? "bg-green-700/40 border-green-500 text-green-200"
+                          : "bg-gray-800/60 border-gray-700 text-gray-300 hover:bg-gray-700"
                         }`}
                       title="Mark as correct"
                     >
@@ -1566,14 +1323,14 @@ function AiQuizPreviewSection({
         <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-800">
           <button
             onClick={() => setAiQuiz(null)}
-            className="rounded-xl border border-gray-700 bg-gray-800 px-5 py-2.5 text-sm font-bold text-gray-200 hover:bg-gray-700 transition"
+            className="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition"
           >
             Discard
           </button>
           <button
             onClick={aiQuiz.meta.editingId ? updateExistingQuiz : publishAiQuiz}
             disabled={publishing}
-            className="rounded-xl bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20 text-white px-5 py-2.5 text-sm font-bold transition-all hover:scale-[1.02] active:scale-[0.98] disabled:bg-gray-700 disabled:text-gray-400 disabled:scale-100 disabled:shadow-none"
+            className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 text-sm font-semibold transition disabled:bg-gray-600"
           >
             {publishing ? "Saving…" : (aiQuiz.meta.editingId ? "Update Quiz" : "Publish Quiz")}
           </button>
@@ -1613,14 +1370,12 @@ function Header({ profile, fbUser, onOpenProfile }) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 font-bold shadow-lg shadow-indigo-500/30">Q</div>
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-amber-600 font-bold">Q</div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Teacher Dashboard</h1>
-          <div className="flex items-center gap-3">
-            <p className="text-indigo-300 font-medium text-sm">
-              Welcome back, {profile?.name || fbUser?.displayName || fbUser?.email}
-            </p>
-          </div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold">Teacher Dashboard</h1>
+          <p className="text-gray-400 text-sm">
+            Hello {fbUser?.displayName || profile?.name || fbUser?.email}
+          </p>
         </div>
       </div>
 
@@ -1628,15 +1383,15 @@ function Header({ profile, fbUser, onOpenProfile }) {
       <div className="flex items-center gap-3">
         <button
           onClick={doLogout}
-          className="hidden sm:inline-flex rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-2 text-sm font-bold text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-900/40"
+          className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 text-sm"
           title="Log out"
         >
-          Sign Out
+          Logout
         </button>
 
         <button
           onClick={onOpenProfile}
-          className="group relative rounded-full p-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:scale-105 transition-transform"
+          className="group relative rounded-full p-1 border border-gray-700 bg-gray-800 hover:bg-gray-700 transition"
           title="Profile & Settings"
         >
           <img
@@ -1648,7 +1403,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
               )}&background=0D8ABC&color=fff`
             }
             alt="avatar"
-            className="relative h-10 w-10 rounded-full object-cover border-2 border-gray-900"
+            className="h-10 w-10 rounded-full object-cover"
           />
           <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition">
             Edit
@@ -1663,7 +1418,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
 function Section({ title, children }) {
   return (
     <div>
-      <h2 className="mb-4 text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400">{title}</h2>
+      <h2 className="mb-3 text-xl font-semibold text-white/90">{title}</h2>
       {children}
     </div>
   );
@@ -1680,7 +1435,7 @@ function Pill({ label, value }) {
 
 function Badge({ children }) {
   return (
-    <span className="px-2.5 py-1 rounded-lg bg-gray-800/80 border border-gray-700/60 text-xs font-semibold text-gray-300">
+    <span className="px-2 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-200">
       {children}
     </span>
   );
@@ -1688,31 +1443,31 @@ function Badge({ children }) {
 
 function Field({ label, value, onChange, placeholder, type = "text" }) {
   return (
-    <div className="flex flex-col min-w-0">
-      <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300 truncate">{label}</label>
+    <div className="flex flex-col">
+      <label className="mb-2 text-xs font-medium text-gray-300 tracking-wide">{label}</label>
       <input
         type={type}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`w-full h-[50px] rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 placeholder:text-gray-500 text-gray-100 ${type === "date" ? "[color-scheme:dark]" : ""}`}
+        className={`rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none transition-all focus:ring-2 focus:ring-blue-500 ${type === "date" ? "[color-scheme:dark]" : ""}`}
       />
     </div>
   );
 }
 
-function NumberField({ label, value, onChange, min, max, onBlur }) {
+function NumberField({ label, value, onChange, min, max, onBlur }) { // Added onBlur
   return (
-    <div className="flex flex-col min-w-0">
-      <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300 truncate">{label}</label>
+    <div>
+      <label className="mb-2 block text-xs font-medium text-gray-300">{label}</label>
       <input
         type="number"
         min={min}
         max={max}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        className="w-full h-[50px] rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 text-[15px] outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 text-gray-100 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        onChange={(e) => onChange(e.target.value)} // Pass the raw value
+        onBlur={onBlur} // Pass onBlur to the input
+        className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );
@@ -1724,13 +1479,13 @@ function Select({ label, value, onChange, options, renderOption }) {
   );
 
   return (
-    <div className="flex flex-col min-w-0">
-      <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-gray-300 truncate">{label}</label>
+    <div className="flex flex-col">
+      <label className="mb-2 text-xs font-medium text-gray-300 tracking-wide">{label}</label>
       <div className="relative">
         <select
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="appearance-none w-full h-[50px] rounded-2xl border border-gray-700/80 bg-gray-800/60 px-5 pr-12 text-[15px] text-gray-100 outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-4 focus:ring-indigo-500/10 cursor-pointer"
+          className="appearance-none rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 pr-12 text-[15px] outline-none focus:ring-2 focus:ring-blue-500 w-full"
         >
           <option value="">{`Select ${label.toLowerCase()}`}</option>
           {normalized.map((o) => (
@@ -1739,9 +1494,9 @@ function Select({ label, value, onChange, options, renderOption }) {
             </option>
           ))}
         </select>
-        <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M7 10l5 5 5-5" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-70">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M7 10l5 5 5-5" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
@@ -1751,17 +1506,12 @@ function Select({ label, value, onChange, options, renderOption }) {
 
 function InputSmall({ value, onChange, placeholder }) {
   return (
-    <div className="relative w-full">
-      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-sm">
-        🔍
-      </span>
-      <input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full h-[44px] rounded-xl border border-gray-700/80 bg-gray-800/60 pl-10 pr-4 text-sm text-gray-100 outline-none transition-all placeholder:text-gray-500 focus:border-indigo-500 focus:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 hover:border-gray-600 cursor-text"
-      />
-    </div>
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+    />
   );
 }
 
@@ -1771,7 +1521,7 @@ function SelectSmall({ value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none h-[44px] w-full min-w-[140px] rounded-xl border border-gray-700/80 bg-gray-800/60 px-4 pr-10 text-sm text-gray-100 outline-none transition-all focus:border-indigo-500 focus:bg-gray-800 focus:ring-2 focus:ring-indigo-500/20 hover:border-gray-600 cursor-pointer"
+        className="appearance-none w-full rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -1779,7 +1529,7 @@ function SelectSmall({ value, onChange, options }) {
           </option>
         ))}
       </select>
-      <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-70">
+      <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path d="M7 10l5 5 5-5" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -1790,31 +1540,31 @@ function SelectSmall({ value, onChange, options }) {
 
 function Empty({ text }) {
   return (
-    <div className="rounded-2xl border border-dashed border-gray-800 bg-gray-900/40 p-10 text-center">
-      <div className="mx-auto mb-3 text-3xl opacity-30">📋</div>
-      <div className="text-gray-400 text-sm font-medium">{text}</div>
+    <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-6 text-gray-400 text-sm">
+      {text}
     </div>
   );
 }
 
 function RowSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-6 animate-pulse">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="h-3 w-16 bg-gray-800 rounded-full" />
-        <div className="h-3 w-12 bg-gray-800 rounded-full" />
-      </div>
-      <div className="h-5 w-2/5 bg-gray-800 rounded" />
-      <div className="mt-3 h-3 w-3/4 bg-gray-800 rounded" />
+    <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-5 animate-pulse">
+      <div className="h-4 w-1/3 bg-gray-800 rounded" />
+      <div className="mt-3 h-4 w-1/2 bg-gray-800 rounded" />
     </div>
   );
 }
 
+/* ------------------------------- QUIZ ROW UI ------------------------------ */
+
 function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
   const [open, setOpen] = useState(false);
-  const [stats, setStats] = useState({ loading: false, count: 0, avg: 0, best: 0, last: null, error: null });
+  const [stats, setStats] = useState({ loading: false, count: 0, avg: 0, best: 0, last: null });
+  const toggleRef = useRef(false);
 
   const loadStats = async () => {
+    if (toggleRef.current) return;
+    toggleRef.current = true;
     setStats((s) => ({ ...s, loading: true }));
     try {
       const qRef = query(
@@ -1826,34 +1576,19 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
       const rows = snap.docs.map((d) => d.data());
 
       if (!rows.length) {
-        setStats({ loading: false, count: 0, avg: 0, best: 0, last: null, error: null });
+        setStats({ loading: false, count: 0, avg: 0, best: 0, last: null });
         return;
       }
 
-      // Group by studentId and take BEST score per student for clearer analytics
-      const userBestMap = {};
-      rows.forEach(r => {
-        const pct = r.total ? Math.round((r.score / r.total) * 100) : 0;
-        if (!userBestMap[r.studentId] || pct > userBestMap[r.studentId]) {
-          userBestMap[r.studentId] = pct;
-        }
-      });
-
-      const uniqueStudentPcts = Object.values(userBestMap);
-      const count = uniqueStudentPcts.length;
-      const avg = count ? Math.round(uniqueStudentPcts.reduce((s, x) => s + x, 0) / count) : 0;
-      const best = uniqueStudentPcts.length ? Math.max(...uniqueStudentPcts) : 0;
+      const count = rows.length;
+      const pcts = rows.map((r) => (r.total ? Math.round((r.score / r.total) * 100) : 0));
+      const avg = Math.round(pcts.reduce((s, x) => s + x, 0) / pcts.length);
+      const best = Math.max(...pcts);
       const last = rows[0]?.completedAt || null;
-      setStats({ loading: false, count, avg, best, last, error: null });
+      setStats({ loading: false, count, avg, best, last });
     } catch (e) {
       console.error("Stats error:", e);
-      let errorMsg = "Could not load data: " + (e.code || e.message || "Unknown error");
-      if (e.code === "permission-denied") {
-        errorMsg = "Unauthorized. Check your Firestore rules.";
-      } else if (e.code?.toString().includes("index") || e.message?.toLowerCase().includes("index")) {
-        errorMsg = "Index required. See console for setup link.";
-      }
-      setStats({ loading: false, count, avg, best, last, error: errorMsg });
+      setStats({ loading: false, count: 0, avg: 0, best: 0, last: null });
     }
   };
 
@@ -1863,90 +1598,66 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
   };
 
   return (
-    <div className="group rounded-2xl border border-gray-800/80 bg-gray-900/60 backdrop-blur-xl transition-all duration-300 hover:border-indigo-500/30 hover:shadow-[0_8px_30px_-10px_rgba(79,70,229,0.25)] relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition duration-300 pointer-events-none" />
-
+    <div className="rounded-xl border border-gray-800 bg-gray-900/60">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 relative z-10">
-        <div className="flex-1">
-          <div className="flex flex-wrap items-center gap-2 mb-1.5">
-            <span className="rounded-md border border-gray-700/80 bg-gray-800/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-300">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-lg font-bold">{quiz.title}</h3>
+            <span className="rounded-full border border-gray-700 bg-gray-800 px-2 py-0.5 text-[11px] text-gray-300">
               {quiz.department} • {quiz.academicYear}
             </span>
             {quiz.sourceMode && (
-              <span className="flex items-center gap-1 rounded-md border border-indigo-700/50 bg-indigo-900/30 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-300">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+              <span className="rounded-full border border-blue-700 bg-blue-800 px-2 py-0.5 text-[11px] text-blue-200">
                 {quiz.sourceMode === "custom" ? "Custom" : "AI Generated"}
               </span>
             )}
-            {quiz.difficulty && (
-              <span className={`rounded-md border px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${quiz.difficulty === "Easy" ? "border-green-500/30 bg-green-500/10 text-green-400" :
-                quiz.difficulty === "Hard" ? "border-red-500/30 bg-red-500/10 text-red-400" :
-                  "border-yellow-500/30 bg-yellow-500/10 text-yellow-400"
-                }`}>
-                {quiz.difficulty}
-              </span>
-            )}
           </div>
-
-          <h3 className="text-xl font-bold text-gray-100 group-hover:text-indigo-300 transition-colors leading-tight mb-1">
-            {quiz.title}
-          </h3>
-          <p className="text-sm text-gray-400 line-clamp-2 md:line-clamp-1 mb-2 pr-4">{quiz.description || "—"}</p>
-
-          <div className="flex items-center gap-3 text-xs text-gray-500 font-medium tracking-wide">
-            <span>Created {fmtDate(quiz.createdAt)}</span>
-            <span>•</span>
-            <span>{quiz.questions?.length || 0} Questions</span>
+          <p className="text-sm text-gray-400 mt-1">{quiz.description || "—"}</p>
+          <div className="mt-1 text-xs text-gray-500">
+            Created {fmtDate(quiz.createdAt)}
           </div>
         </div>
 
-        <div className="flex flex-col sm:items-end gap-3 shrink-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center gap-1 bg-gray-950/50 p-1 rounded-xl border border-gray-800/80">
-              <button
-                onClick={() => onEdit(quiz)}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
-                title="Edit Quiz"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDuplicate(quiz)}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-400 hover:bg-gray-800 hover:text-gray-200 transition-colors"
-                title="Duplicate"
-              >
-                Duplicate
-              </button>
-              <button
-                onClick={() => onDelete(quiz.id)}
-                className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-400 hover:bg-red-900/40 hover:text-red-400 transition-colors"
-                title="Delete"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onEdit(quiz)}
+            className="rounded-lg border border-blue-700 bg-blue-800/50 hover:bg-blue-700/50 px-3 py-1.5 text-sm text-blue-200"
+            title="Edit Quiz"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => onDuplicate(quiz)}
+            className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 text-sm"
+            title="Duplicate"
+          >
+            Duplicate
+          </button>
+          <button
+            onClick={() => onDelete(quiz.id)}
+            className="rounded-lg bg-red-600 hover:bg-red-700 px-3 py-1.5 text-sm text-white"
+            title="Delete"
+          >
+            Delete
+          </button>
           <button
             onClick={handleToggle}
-            className={`rounded-xl px-5 py-2.5 text-sm font-bold shadow-lg transition-all hover:scale-105 active:scale-95 ${open
-              ? "bg-gray-800 border border-gray-700 text-white shadow-none"
-              : "bg-indigo-600 hover:bg-indigo-500 border border-indigo-500 text-white shadow-indigo-900/30"
-              }`}
+            className="rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-sm text-white"
             title="Toggle analytics"
           >
-            {open ? "Hide Stats" : "View Analytics"}
+            {open ? "Hide" : "Analytics"}
           </button>
         </div>
       </div>
 
       {/* Body (analytics) */}
       <div
-        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        className={`grid transition-[grid-template-rows] duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
           }`}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-gray-800/80 bg-gray-900/40 p-5 grid sm:grid-cols-4 gap-4 relative z-10">
+          <div className="border-t border-gray-800 p-4 grid sm:grid-cols-4 gap-4">
             {stats.loading ? (
               <>
                 <SkeletonChip />
@@ -1954,11 +1665,6 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
                 <SkeletonChip />
                 <SkeletonChip />
               </>
-            ) : stats.error ? (
-              <div className="sm:col-span-4 rounded-xl border border-red-900/50 bg-red-950/20 p-4 text-center">
-                <div className="text-red-400 font-bold mb-1">Analytics Error</div>
-                <div className="text-red-300/70 text-sm">{stats.error}</div>
-              </div>
             ) : (
               <>
                 <KPI label="Attempts" value={String(stats.count)} />
@@ -1973,11 +1679,12 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
     </div>
   );
 }
+
 function KPI({ label, value }) {
   return (
-    <div className="rounded-2xl border border-gray-800/80 bg-gradient-to-br from-gray-900/80 to-indigo-950/20 p-5 flex flex-col items-center justify-center text-center inset-shadow-sm">
-      <div className="mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400">{label}</div>
-      <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-400">{value}</div>
+    <div className="rounded-lg border border-gray-800 bg-gray-900/70 p-4">
+      <div className="text-xs text-gray-400">{label}</div>
+      <div className="mt-1 text-xl font-extrabold">{value}</div>
     </div>
   );
 }
@@ -1995,15 +1702,13 @@ function SkeletonChip() {
 
 function fmtDate(ts) {
   if (!ts) return "";
-  try {
-    if (typeof ts === "object" && typeof ts.toDate === "function") return ts.toDate().toLocaleString();
-    if (typeof ts === "object" && typeof ts.toMillis === "function") return new Date(ts.toMillis()).toLocaleString();
-    const d = new Date(ts);
-    if (isNaN(d.getTime())) return "";
+  if (typeof ts === "object" && "toMillis" in ts) {
+    const d = new Date(ts.toMillis());
     return d.toLocaleString();
-  } catch (e) {
-    return "";
   }
+  const d = new Date(ts);
+  if (isNaN(d.getTime())) return "";
+  return d.toLocaleString();
 }
 
 /* --- helper: compress to Data URL (no server, no Storage) --- */
@@ -2034,125 +1739,4 @@ function scaleToFit(w, h, maxW, maxH) {
   if (w <= maxW && h <= maxH) return { width: w, height: h };
   const ratio = Math.min(maxW / w, maxH / h);
   return { width: Math.round(w * ratio), height: Math.round(h * ratio) };
-}
-
-function StudentRequestsSection({ requests, busyReqs }) {
-  const handleApprove = async (req) => {
-    const action = confirm(`Are you sure you want to APPROVE these changes for ${req.userName || req.userEmail}?\nThis will automatically update their profile.`);
-    if (!action) return;
-
-    try {
-      // 1. Update the student's profile doc
-      await updateDoc(doc(db, "users", req.userId), {
-        ...req.requestedChanges,
-        // Optional: lock all fields again by clearing any previous 'unlocked' flags if you use them
-      });
-
-      // 2. Mark request as resolved
-      await updateDoc(doc(db, "editRequests", req.id), {
-        status: "resolved",
-        resolvedAt: serverTimestamp(),
-        action: "approved"
-      });
-      alert("Changes applied and request resolved.");
-    } catch (e) {
-      console.error("Approve error:", e);
-      if (e.code === "permission-denied") {
-        alert("Permission denied. Ensure your Firestore Rules allow 'teacher' to update 'users' documents.");
-      } else {
-        alert("Could not approve request. See console for details.");
-      }
-    }
-  };
-
-  const handleReject = async (reqId) => {
-    const reason = prompt("Enter rejection reason (optional):");
-    if (reason === null) return; // cancelled prompt
-
-    try {
-      await updateDoc(doc(db, "editRequests", reqId), {
-        status: "resolved",
-        resolvedAt: serverTimestamp(),
-        action: "rejected",
-        rejectReason: reason
-      });
-      alert("Request rejected.");
-    } catch (e) {
-      console.error("Reject error:", e);
-      alert("Could not reject request.");
-    }
-  };
-
-  return (
-    <Section title="Pending Student Requests">
-      <div className="rounded-2xl border border-gray-800/80 bg-gray-900/60 backdrop-blur-xl p-6">
-        <p className="text-sm text-gray-400 mb-5 font-medium">
-          Students in your department who need changes to their locked profile fields.
-        </p>
-
-        {busyReqs ? (
-          <div className="animate-pulse flex flex-col gap-4">
-            <div className="h-28 bg-gray-800/50 rounded-2xl" />
-            <div className="h-28 bg-gray-800/50 rounded-2xl" />
-          </div>
-        ) : requests.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-3xl opacity-30 mb-3">✅</div>
-            <div className="text-gray-500 text-sm font-medium">No pending requests for your department.</div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-4">
-            {requests.map(req => (
-              <div key={req.id} className="group rounded-2xl border border-indigo-800/30 bg-gradient-to-br from-indigo-950/30 to-gray-900/50 p-5 transition-all duration-300 hover:border-indigo-500/40 hover:shadow-[0_4px_24px_-8px_rgba(99,102,241,0.2)]">
-                <div className="flex justify-between items-start gap-3 mb-4">
-                  <div>
-                    <div className="font-bold text-indigo-100 text-base">{req.userName || "Student"}</div>
-                    <div className="text-sm text-indigo-400 font-medium">{req.userEmail}</div>
-                    <div className="text-[10px] font-medium text-gray-500 mt-1">
-                      {req.createdAt?.toDate ? req.createdAt.toDate().toLocaleString() : "Recently"}
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={() => handleReject(req.id)}
-                      className="rounded-xl border border-red-900/50 bg-red-950/20 hover:bg-red-900/40 text-red-400 text-xs font-bold px-4 py-2 transition-all"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => handleApprove(req)}
-                      className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-4 py-2 transition-all shadow-lg shadow-indigo-900/20 hover:scale-105 active:scale-95"
-                    >
-                      Approve & Apply
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-3 mb-4">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block">Requested Changes:</span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {req.fields?.map((field, i) => (
-                      <div key={i} className="rounded-xl bg-gray-950/40 border border-gray-800/80 p-3">
-                        <div className="text-[10px] font-black uppercase text-indigo-400 mb-2">{field.replace(/([A-Z])/g, ' $1')}</div>
-                        <div className="flex items-center gap-2 text-xs">
-                          <div className="flex-1 opacity-50 line-through truncate">{req.oldValues?.[field] || "EMPTY"}</div>
-                          <div className="text-gray-600">→</div>
-                          <div className="flex-1 text-green-400 font-bold truncate">{req.requestedChanges?.[field]}</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-gray-950/50 p-3.5 border border-gray-800/50">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 block mb-1.5">Reason provided:</span>
-                  <p className="text-sm text-gray-300 leading-relaxed">{req.reason}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </Section>
-  );
 }
