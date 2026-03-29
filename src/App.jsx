@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 // Lazy-loaded pages (speeds up initial load)
 const SignIn            = lazy(() => import("./routes/SignIn.jsx"));
 const RoleGate          = lazy(() => import("./routes/Auth/RoleGate.jsx"));
+const FirstTimeLogin    = lazy(() => import("./routes/Auth/FirstTimeLogin.jsx"));
 const StudentDashboard  = lazy(() => import("./routes/Student/Dashboard.jsx"));
 const TeacherDashboard  = lazy(() => import("./routes/Teacher/Dashboard.jsx"));
 const QuizPage       = lazy(() => import("./routes/quiz/QuizPage.jsx"));
@@ -32,12 +33,25 @@ function ProtectedRoute({ children, role }) {
 
   if (!fbUser) return <Navigate to="/signin" replace />;
 
-  // If profile not completed (no role), force RoleGate
   if (!profile || !profile.role) return <RoleGate />;
 
-  if (role && profile.role !== role) {
+  // Force verification on first login
+  if (profile.verified === false && profile.role !== "super_admin") {
+      return <FirstTimeLogin />;
+  }
+
+  // Admin roles mapping
+  const isAdmin = ["super_admin", "inst_admin", "dept_admin"].includes(profile.role);
+  const isTeacher = profile.role === "teacher";
+  const isStudent = profile.role === "student";
+
+  if (role) {
+    if (role === "teacher" && (isTeacher || isAdmin)) return children;
+    if (role === "student" && isStudent) return children;
+    if (role === "admin" && isAdmin) return children;
+
     // Send to the correct dashboard
-    return <Navigate to={profile.role === "teacher" ? "/teacher" : "/student"} replace />;
+    return <Navigate to={profile.role === "student" ? "/student" : "/teacher"} replace />;
   }
 
   return children;
@@ -55,7 +69,16 @@ function Gate() {
 
   if (!profile || !profile.role) return <RoleGate />;
 
-  return <Navigate to={profile.role === "teacher" ? "/teacher" : "/student"} replace />;
+  // Force verification on first login
+  if (profile.verified === false && profile.role !== "super_admin") {
+    return <Navigate to="/verify" replace />;
+  }
+
+  if (["teacher", "super_admin", "inst_admin", "dept_admin"].includes(profile.role)) {
+    return <Navigate to="/teacher" replace />;
+  }
+
+  return <Navigate to="/student" replace />;
 }
 
 /* ---------------- Shell with routes ---------------- */
@@ -66,6 +89,11 @@ function Shell() {
         <Route path="/" element={<Gate />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/role" element={<RoleGate />} />
+        <Route path="/verify" element={
+            <ProtectedRoute>
+                <FirstTimeLogin />
+            </ProtectedRoute>
+        } />
 
         <Route
           path="/student"
@@ -80,6 +108,16 @@ function Shell() {
           path="/teacher"
           element={
             <ProtectedRoute role="teacher">
+              <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Admin alias - for now mapping to teacher dash or specialized views later */}
+        <Route
+          path="/admin"
+          element={
+            <ProtectedRoute role="admin">
               <TeacherDashboard />
             </ProtectedRoute>
           }

@@ -15,7 +15,101 @@
   }
 }
 
-/* Allow arbitrary values to find the keyframes by defining them globally as well */
+/* Base Theme Variables */
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+  --border-main: #e2e8f0;
+  
+  --theme-toggle-icon: black;
+  --theme-toggle-border: rgba(0,0,0,0.25);
+  --theme-toggle-light-scale: 0;
+  --theme-toggle-dark-scale: 1;
+  --theme-toggle-rotate: 0turn;
+}
+
+/* Theme Switch Logic using :has() - Modern Browser only */
+:root:has(#theme:checked) {
+  --bg-main: #020617;
+  --bg-card: #0f172a;
+  --bg-subtle: #1e293b;
+  --text-main: #f8fafc;
+  --text-dim: #94a3b8;
+  --border-main: #1e293b;
+
+  --theme-toggle-light-scale: 1;
+  --theme-toggle-dark-scale: 0;
+  --theme-toggle-icon: white;
+  --theme-toggle-border: rgba(255,255,255,0.25);
+  --theme-toggle-rotate: 1turn;
+}
+
+/* Global Styles using Variables */
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* User's Theme Switcher CSS */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.theme-toggle {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  cursor: pointer;
+  outline: 2px solid var(--theme-toggle-border);
+  color: var(--theme-toggle-icon);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--bg-subtle);
+}
+
+.theme-toggle:hover {
+  background-color: var(--bg-card);
+  outline-color: var(--text-dim);
+}
+
+.theme-toggle svg {
+  grid-area: 1/1;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, scale 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  scale: var(--theme-toggle-dark-scale);
+  rotate: var(--theme-toggle-rotate);
+}
+
+/* 
+   In Light Mode: light-scale=0, dark-scale=1 
+   In Dark Mode:  light-scale=1, dark-scale=0 
+   
+   If we want Sun in Dark Mode and Moon in Light Mode:
+   Moon (first child) should be visible when dark-scale=1 (Light Mode)
+   Sun (second child) should be visible when light-scale=1 (Dark Mode)
+*/
+
+.theme-toggle svg:first-child {
+  /* This is the Moon */
+  scale: var(--theme-toggle-dark-scale);
+  opacity: var(--theme-toggle-dark-scale);
+}
+
+.theme-toggle svg:nth-child(2) {
+  /* This is the Sun */
+  scale: var(--theme-toggle-light-scale);
+  opacity: var(--theme-toggle-light-scale);
+}
+
 @keyframes fadeInUp {
   0% { opacity: 0; transform: translateY(20px); }
   100% { opacity: 1; transform: translateY(0); }

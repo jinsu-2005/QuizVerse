@@ -15,6 +15,10 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
 } from "firebase/firestore";
 import { auth, db } from "../firebase";
 
@@ -34,27 +38,13 @@ const AuthContext = createContext({
 
 export const useAuth = () => useContext(AuthContext);
 
-// Ensure a Firestore profile doc exists for the user
-async function ensureUserDoc(user) {
-  if (!user) return null;
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) {
-    const payload = {
-      // minimal defaults; student can complete in RoleGate
-      role: null, // "student" | "teacher" after onboarding
-      name: user.displayName || null,
-      displayName: user.displayName || null,
-      email: user.email || null,
-      photoURL: user.photoURL || null,
-      createdAt: serverTimestamp(),
-      averageScore: 0,
-      totalQuizzes: 0,
-    };
-    await setDoc(ref, payload, { merge: true });
-    return payload;
-  }
-  return snap.data();
+// Check if user exists by email (for Google Login)
+async function findUserByEmail(email) {
+  if (!email) return null;
+  const q = query(collection(db, "users"), where("email", "==", email));
+  const snap = await getDocs(q);
+  if (snap.empty) return null;
+  return { id: snap.docs[0].id, ...snap.docs[0].data() };
 }
 
 // -----------------------------
@@ -79,10 +69,13 @@ export function AuthProvider({ children }) {
       }
       try {
         setLoading(true);
-        await ensureUserDoc(u);
-        // live snapshot
+        // Live snapshot
         unsub = onSnapshot(doc(db, "users", u.uid), (ss) => {
-          setProfile(ss.exists() ? { ...ss.data(), uid: u.uid } : null);
+          if (ss.exists()) {
+            setProfile({ ...ss.data(), uid: u.uid });
+          } else {
+            setProfile(null);
+          }
           setLoading(false);
         }, (err) => {
           console.error("Profile snapshot error:", err);
@@ -107,14 +100,31 @@ export function AuthProvider({ children }) {
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     const res = await signInWithPopup(auth, provider);
-    // ensure profile exists (just in case)
-    await ensureUserDoc(res.user);
-    return res.user;
+    const u = res.user;
+
+    // Validate that user exists in Firestore
+    const existing = await findUserByEmail(u.email);
+    if (!existing) {
+      await signOut(auth);
+      throw new Error("Your email is not registered in the system. Please contact your administrator.");
+    }
+    
+    // Ensure doc exists by UID if it only existed by email (manual admin entry)
+    const userRef = doc(db, "users", u.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+       await setDoc(userRef, {
+         ...existing,
+         uid: u.uid,
+         lastLogin: serverTimestamp(),
+       }, { merge: true });
+    }
+
+    return u;
   };
 
   const signInWithEmail = async (email, password) => {
     const res = await signInWithEmailAndPassword(auth, email, password);
-    await ensureUserDoc(res.user);
     return res.user;
   };
 
@@ -123,7 +133,13 @@ export function AuthProvider({ children }) {
     if (displayName) {
       await updateProfile(res.user, { displayName });
     }
-    await ensureUserDoc(res.user);
+    await setDoc(doc(db, "users", res.user.uid), {
+      email,
+      displayName,
+      createdAt: serverTimestamp(),
+      role: "student", 
+      verified: false,
+    });
     return res.user;
   };
 
