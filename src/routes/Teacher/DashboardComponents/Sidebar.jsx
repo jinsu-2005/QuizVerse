@@ -96,6 +96,14 @@ export function SidebarLayout({ children, profile, fbUser, onOpenProfile, active
             </div>
             <span className="text-[var(--text-dim)] group-hover:translate-x-1 transition-transform group-hover:text-indigo-500">→</span>
           </div>
+
+          <button
+            onClick={doLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500 hover:bg-rose-500/20 hover:border-rose-500/40 transition-all duration-200 group"
+          >
+            <span className="text-lg group-hover:scale-110 transition-transform">🚪</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Sign Out</span>
+          </button>
         </div>
       </aside>
 

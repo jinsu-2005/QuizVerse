@@ -76,7 +76,6 @@ export default function StudentDashboard() {
     if (!profile || profile.role !== "student") return;
 
     if (!profile.department || !profile.academicYear) {
-      console.warn("[DEBUG] Student profile missing filters:", { dept: profile.department, year: profile.academicYear });
       setBusyQuizzes(false);
       setQuizzes([]);
       return;
@@ -265,16 +264,40 @@ export default function StudentDashboard() {
               <RowSkeleton />
               <RowSkeleton />
             </>
-          ) : filteredQuizzes.length === 0 ? (
-            <div className="space-y-4">
-              <Empty text={`No quizzes match your criteria.`} />
+          ) : (!profile.department || !profile.academicYear) ? (
+            <div style={{
+              padding: "1.5rem",
+              borderRadius: "1rem",
+              border: "1px solid rgba(45,127,234,0.25)",
+              background: "rgba(45,127,234,0.06)",
+              textAlign: "center",
+              color: "#7fa8d0"
+            }}>
+              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📋</div>
+              <p style={{ fontWeight: 700, marginBottom: "0.5rem", color: "#e8f0fe" }}>
+                Profile Incomplete
+              </p>
+              <p style={{ fontSize: "0.82rem", marginBottom: "1rem" }}>
+                Your Academic Year or Department is not set. Complete your profile to see quizzes.
+              </p>
               <button
-                onClick={() => setBypassFilters(true)}
-                className="text-xs text-blue-400 hover:text-blue-300 underline"
+                onClick={() => nav("/verify")}
+                style={{
+                  padding: "0.5rem 1.25rem",
+                  borderRadius: "999px",
+                  border: "none",
+                  background: "var(--accent, #2d7fea)",
+                  color: "#fff",
+                  fontWeight: 700,
+                  fontSize: "0.8rem",
+                  cursor: "pointer"
+                }}
               >
-                Debug: Show quizzes from all departments
+                Complete Profile →
               </button>
             </div>
+          ) : filteredQuizzes.length === 0 ? (
+            <Empty text="No quizzes match your criteria." />
           ) : (
             <div className="grid gap-4">
               {bypassFilters && (

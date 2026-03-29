@@ -58,40 +58,55 @@ export function AuthProvider({ children }) {
   // Keep a live subscription to /users/{uid} when signed in
   useEffect(() => {
     let unsub = null;
+
+    const cancelCurrent = () => {
+      if (unsub) { unsub(); unsub = null; }
+    };
+
     const off = onAuthStateChanged(auth, async (u) => {
+      // Always cancel the previous Firestore listener before setting up a new one.
+      // Without this, switching from anonymous → real user leaves an orphaned
+      // listener that can overwrite profile with null and cause repeated verify loops.
+      cancelCurrent();
+
       setFbUser(u || null);
+
       if (!u) {
-        // signed out
-        if (unsub) unsub();
         setProfile(null);
         setLoading(false);
         return;
       }
+
+      // Skip anonymous users — they are only used as a bridge for ID lookups
+      // in SignIn.jsx. We don't want their (non-existent) Firestore doc to
+      // clear the profile state.
+      if (u.isAnonymous) {
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        // Live snapshot
-        unsub = onSnapshot(doc(db, "users", u.uid), (ss) => {
-          if (ss.exists()) {
-            setProfile({ ...ss.data(), uid: u.uid });
-          } else {
+        unsub = onSnapshot(
+          doc(db, "users", u.uid),
+          (ss) => {
+            setProfile(ss.exists() ? { ...ss.data(), uid: u.uid } : null);
+            setLoading(false);
+          },
+          (err) => {
+            console.error("Profile snapshot error:", err);
             setProfile(null);
+            setLoading(false);
           }
-          setLoading(false);
-        }, (err) => {
-          console.error("Profile snapshot error:", err);
-          setProfile(null);
-          setLoading(false);
-        });
+        );
       } catch (e) {
         console.error("Auth bootstrap error:", e);
         setProfile(null);
         setLoading(false);
       }
     });
-    return () => {
-      off();
-      if (unsub) unsub();
-    };
+
+    return () => { off(); cancelCurrent(); };
   }, []);
 
   // -----------------------------
@@ -102,23 +117,33 @@ export function AuthProvider({ children }) {
     const res = await signInWithPopup(auth, provider);
     const u = res.user;
 
-    // Validate that user exists in Firestore
+    // Check the email exists in our system
     const existing = await findUserByEmail(u.email);
     if (!existing) {
       await signOut(auth);
       throw new Error("Your email is not registered in the system. Please contact your administrator.");
     }
-    
-    // Ensure doc exists by UID if it only existed by email (manual admin entry)
-    const userRef = doc(db, "users", u.uid);
-    const snap = await getDoc(userRef);
-    if (!snap.exists()) {
-       await setDoc(userRef, {
-         ...existing,
-         uid: u.uid,
-         lastLogin: serverTimestamp(),
-       }, { merge: true });
+
+    const googleUid = u.uid;
+    const seededUid = existing.id; // Firestore doc ID (may equal googleUid if accounts are linked)
+
+    if (seededUid && seededUid !== googleUid) {
+      // UID mismatch: Firebase Auth created a SEPARATE Google-only account for this email.
+      // This means the email already has an email/password account with a different UID.
+      // If we proceed, we'd end up with two Firestore docs and break email/password login.
+      //
+      // Correct behaviour: sign out the Google user and tell them to use their password.
+      await signOut(auth);
+      throw new Error(
+        "This account uses email/password login. Please sign in with your Register Number (or email) and password instead."
+      );
     }
+
+    // UIDs match (Firebase linked the Google provider to the existing account).
+    // Just update lastLogin — no doc migration needed.
+    await setDoc(doc(db, "users", googleUid), {
+      lastLogin: serverTimestamp(),
+    }, { merge: true });
 
     return u;
   };
@@ -137,7 +162,7 @@ export function AuthProvider({ children }) {
       email,
       displayName,
       createdAt: serverTimestamp(),
-      role: "student", 
+      role: "student",
       verified: false,
     });
     return res.user;
