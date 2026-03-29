@@ -1,16 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-  GithubAuthProvider,
-  signInAnonymously,
   sendPasswordResetEmail,
 } from "firebase/auth";
-import { auth, db } from "../firebase"; // <- adjust path if needed
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { auth } from "../firebase";
+import { useAuth } from "../context/AuthContext.jsx";
 
 /**
  * Advanced, modern SignIn/SignUp page (JS only, Tailwind-ready)
@@ -23,9 +18,6 @@ import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from "firebase/firest
  *
  * Works with your App.js routing/auth patterns.  :contentReference[oaicite:1]{index=1}
  */
-
-const googleProvider = new GoogleAuthProvider();
-const githubProvider = new GithubAuthProvider();
 
 export default function SignIn() {
   const nav = useNavigate();
