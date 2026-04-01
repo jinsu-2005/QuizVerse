@@ -20,14 +20,15 @@ import {
 /* ---------------------------- CONSTS ---------------------------- */
 
 const DEPARTMENTS = [
-  { label: "Information Technology (IT)", value: "IT" },
-  { label: "Computer Science and Engineering (CSE)", value: "CSE" },
-  { label: "Electronics and Communication Engineering (ECE)", value: "ECE" },
-  { label: "Electrical and Electronics Engineering (EEE)", value: "EEE" },
-  { label: "Mechanical Engineering (MECH)", value: "MECH" },
-  { label: "Civil Engineering (CIVIL)", value: "CIVIL" },
-  { label: "Artificial Intelligence and Data Science (AIDS)", value: "AIDS" },
-  { label: "Artificial Intelligence and Machine Learning (AIML)", value: "AIML" },
+  { label: "First Year - Foundation (FY)",                        value: "FY"    },
+  { label: "Information Technology (IT)",                         value: "IT"    },
+  { label: "Computer Science and Engineering (CSE)",              value: "CSE"   },
+  { label: "Electronics and Communication Engineering (ECE)",     value: "ECE"   },
+  { label: "Electrical and Electronics Engineering (EEE)",        value: "EEE"   },
+  { label: "Mechanical Engineering (MECH)",                       value: "MECH"  },
+  { label: "Civil Engineering (CIVIL)",                           value: "CIVIL" },
+  { label: "Artificial Intelligence and Data Science (AIDS)",     value: "AIDS"  },
+  { label: "Artificial Intelligence and Machine Learning (AIML)", value: "AIML"  },
 ];
 
 // All fields below require teacher/admin approval to change:
@@ -227,7 +228,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Context badges */}
-      <div className="mt-3 text-gray-300">
+      <div className="mt-3 text-[var(--text-dim)] transition-colors">
         <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm">
           <Badge>{profile.institute || "No Institute"}</Badge>
           <Badge>{profile.academicYear || "No Year"}</Badge>
@@ -245,12 +246,12 @@ export default function StudentDashboard() {
               placeholder="Search quizzes..." 
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="flex-1 bg-gray-900 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+              className="flex-1 bg-[var(--bg-input)] border border-[var(--border-input)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-main)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-[var(--text-dim)]"
             />
             <select 
               value={difficultyFilter}
               onChange={e => setDifficultyFilter(e.target.value)}
-              className="bg-gray-900 border border-gray-700/50 rounded-xl px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+              className="bg-[var(--bg-input)] border border-[var(--border-input)] rounded-xl px-4 py-2.5 text-sm text-[var(--text-main)] focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
             >
               <option value="All">All Difficulties</option>
               <option value="Easy">Easy</option>
@@ -265,33 +266,17 @@ export default function StudentDashboard() {
               <RowSkeleton />
             </>
           ) : (!profile.department || !profile.academicYear) ? (
-            <div style={{
-              padding: "1.5rem",
-              borderRadius: "1rem",
-              border: "1px solid rgba(45,127,234,0.25)",
-              background: "rgba(45,127,234,0.06)",
-              textAlign: "center",
-              color: "#7fa8d0"
-            }}>
-              <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>📋</div>
-              <p style={{ fontWeight: 700, marginBottom: "0.5rem", color: "#e8f0fe" }}>
+            <div className="p-6 rounded-2xl border border-[var(--border-main)] bg-[var(--bg-subtle)] text-center text-[var(--text-dim)] transition-colors">
+              <div className="text-3xl mb-2">📋</div>
+              <p className="font-bold mb-2 text-[var(--text-main)] transition-colors">
                 Profile Incomplete
               </p>
-              <p style={{ fontSize: "0.82rem", marginBottom: "1rem" }}>
+              <p className="text-[0.82rem] mb-4">
                 Your Academic Year or Department is not set. Complete your profile to see quizzes.
               </p>
               <button
                 onClick={() => nav("/verify")}
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: "999px",
-                  border: "none",
-                  background: "var(--accent, #2d7fea)",
-                  color: "#fff",
-                  fontWeight: 700,
-                  fontSize: "0.8rem",
-                  cursor: "pointer"
-                }}
+                className="px-5 py-2 rounded-full border-none bg-indigo-600 text-white font-bold text-[0.8rem] cursor-pointer hover:bg-indigo-500 transition-all active:scale-95 shadow-lg shadow-indigo-500/20"
               >
                 Complete Profile →
               </button>
@@ -301,7 +286,7 @@ export default function StudentDashboard() {
           ) : (
             <div className="grid gap-4">
               {bypassFilters && (
-                <div className="rounded-lg bg-blue-600/20 border border-blue-500/30 p-3 text-[11px] text-blue-200 flex items-center justify-between">
+                <div className="rounded-lg bg-indigo-600/10 border border-indigo-500/30 p-3 text-[11px] text-indigo-600 dark:text-indigo-400 flex items-center justify-between transition-colors">
                   <span>Showing results for all departments (Debug Mode)</span>
                   <button onClick={() => setBypassFilters(false)} className="underline">Restore Filters</button>
                 </div>
@@ -322,22 +307,22 @@ export default function StudentDashboard() {
 
         {/* Quizify CTA */}
         <Section title="Level Up with Quizify (Create Your Own Quizzes)">
-          <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-6 group">
+          <div className="relative overflow-hidden rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-6 group transition-colors shadow-sm hover:shadow-md transition-all">
             {/* Ambient glow */}
-            <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-blue-600/20 blur-3xl transition-all duration-300 group-hover:scale-110" />
-            <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl transition-all duration-300 group-hover:scale-110" />
+            <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl transition-all duration-300 group-hover:scale-110" />
+            <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-indigo-500/10 blur-3xl transition-all duration-300 group-hover:scale-110" />
 
             {/* Header row */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-blue-200">
-                  <span className="inline-block h-2 w-2 rounded-full bg-blue-400 animate-pulse" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-3 py-1 text-[11px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-300 transition-colors">
+                  <span className="inline-block h-2 w-2 rounded-full bg-indigo-500 animate-pulse" />
                   Supercharge your revisions
                 </div>
-                <h3 className="mt-3 text-2xl font-extrabold">
-                  Practice smarter with <span className="text-blue-400">Quizify</span>
+                <h3 className="mt-3 text-2xl font-extrabold text-[var(--text-main)] transition-colors">
+                  Practice smarter with <span className="text-indigo-600">Quizify</span>
                 </h3>
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-[var(--text-dim)] transition-colors">
                   Build bite-sized quizzes from your topics, get instant feedback, and track mastery.
                 </p>
               </div>
@@ -347,7 +332,7 @@ export default function StudentDashboard() {
                   href="https://jinsu-quizify-ai.netlify.app/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-700/30 transition hover:translate-y-[-1px] hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition hover:translate-y-[-1px] hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 active:scale-95"
                   aria-label="Open Quizify in a new tab"
                 >
                   Launch Quizify
@@ -355,7 +340,7 @@ export default function StudentDashboard() {
                     <path d="M7 17L17 7M17 7H9M17 7V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </a>
-                <div className="mt-2 text-[10px] text-gray-400 text-right">Opens in a new tab</div>
+                <div className="mt-2 text-[10px] text-[var(--text-dim)] text-right">Opens in a new tab</div>
               </div>
             </div>
 
@@ -367,11 +352,11 @@ export default function StudentDashboard() {
             </div>
 
             {/* Footer tip */}
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-gray-800 pt-4">
-              <div className="text-xs text-gray-400">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[var(--border-main)] pt-4">
+              <div className="text-xs text-[var(--text-dim)]">
                 Tip: Do 10 questions a day to build an unstoppable streak.
               </div>
-              <kbd className="rounded-md border border-gray-700 bg-gray-800 px-2 py-1 text-[11px] text-gray-300">
+              <kbd className="rounded-md border border-[var(--border-main)] bg-[var(--bg-subtle)] px-2 py-1 text-[11px] text-[var(--text-dim)] transition-colors">
                 Pro move: Pin Quizify in your browser
               </kbd>
             </div>
@@ -388,43 +373,43 @@ export default function StudentDashboard() {
             {uniqueQuizHistory.map((h, i) => (
               <div 
                 key={h.quizId} 
-                className="rounded-2xl border border-gray-800/80 bg-gray-900/60 p-5 flex flex-col transition-all duration-300 hover:border-indigo-500/30 hover:shadow-xl group"
+                className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] p-5 flex flex-col transition-all duration-300 hover:border-indigo-500/30 hover:shadow-xl group"
               >
                 <div className="flex flex-col gap-1 mb-4">
-                  <h4 className="font-bold text-gray-100 group-hover:text-indigo-300 transition-colors line-clamp-1">{h.quizTitle}</h4>
-                  <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{h.totalAttempts} Attempt{h.totalAttempts !== 1 ? 's' : ''} total</div>
+                  <h4 className="font-bold text-[var(--text-main)] group-hover:text-indigo-400 transition-colors line-clamp-1">{h.quizTitle}</h4>
+                  <div className="text-[10px] text-[var(--text-muted)] font-bold uppercase tracking-wider">{h.totalAttempts} Attempt{h.totalAttempts !== 1 ? 's' : ''} total</div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="rounded-xl bg-gray-950/40 border border-gray-800/80 p-3 text-center">
-                    <div className="text-[9px] font-black uppercase tracking-tighter text-indigo-400/80 mb-1">Latest</div>
-                    <div className={`text-lg font-black ${h.latestScore >= 0.8 ? 'text-green-400' : h.latestScore >= 0.5 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <div className="rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-muted)] p-3 text-center transition-colors">
+                    <div className="text-[9px] font-black uppercase tracking-tighter text-indigo-400 mb-1">Latest</div>
+                    <div className={`text-lg font-black ${h.latestScore >= 0.8 ? 'text-emerald-500' : h.latestScore >= 0.5 ? 'text-amber-500' : 'text-rose-500'}`}>
                       {Math.round(h.latestScore * 100)}%
                     </div>
                   </div>
-                  <div className="rounded-xl bg-gray-950/40 border border-indigo-500/20 p-3 text-center ring-1 ring-indigo-500/20">
-                    <div className="text-[9px] font-black uppercase tracking-tighter text-indigo-400 mb-1">Best</div>
-                    <div className={`text-lg font-black ${h.bestScore >= 0.8 ? 'text-green-400' : h.bestScore >= 0.5 ? 'text-yellow-400' : 'text-red-400'}`}>
+                  <div className="rounded-xl bg-[var(--bg-subtle)] border border-indigo-500/20 p-3 text-center ring-1 ring-indigo-500/20 transition-colors">
+                    <div className="text-[9px] font-black uppercase tracking-tighter text-indigo-500 mb-1">Best</div>
+                    <div className={`text-lg font-black ${h.bestScore >= 0.8 ? 'text-emerald-500' : h.bestScore >= 0.5 ? 'text-amber-500' : 'text-rose-500'}`}>
                       {Math.round(h.bestScore * 100)}%
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between text-[11px] text-gray-500 mb-4 px-1">
+                <div className="flex items-center justify-between text-[11px] text-[var(--text-muted)] mb-4 px-1">
                   <span>Last taken:</span>
-                  <span className="font-semibold text-gray-400">{formatDate(h.latestDate)}</span>
+                  <span className="font-semibold text-[var(--text-dim)]">{formatDate(h.latestDate)}</span>
                 </div>
 
                 <div className="flex gap-2">
                   <button
                     onClick={() => nav(`/result/${h.latestAttemptId}`)}
-                    className="flex-1 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 px-3 py-2 text-xs font-bold transition-colors border border-gray-700"
+                    className="flex-1 rounded-xl bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-dim)] px-3 py-2 text-xs font-bold transition-all border border-[var(--border-main)]"
                   >
                     Latest
                   </button>
                   <button
                     onClick={() => nav(`/result/${h.bestAttemptId}`)}
-                    className="flex-1 rounded-xl bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white px-3 py-2 text-xs font-bold transition-all border border-indigo-500/30"
+                    className="flex-1 rounded-xl bg-indigo-600/10 hover:bg-indigo-600 text-indigo-600 dark:text-indigo-400 hover:text-white px-3 py-2 text-xs font-bold transition-all border border-indigo-500/20"
                   >
                     Best
                   </button>
@@ -446,10 +431,16 @@ export default function StudentDashboard() {
       {/* Toast */}
       {toast.msg && (
         <div
-          className={`fixed top-6 right-4 z-50 rounded-lg px-4 py-3 text-sm shadow-lg ${toast.type === "error" ? "bg-red-600" : "bg-green-600"
-            } text-white animate-[fadeIn_300ms_ease]`}
+          className={`fixed top-6 right-4 z-[200] rounded-2xl px-6 py-4 text-sm font-bold shadow-2xl border animate-[fadeInUp_500ms_ease] ${
+            toast.type === "error" 
+              ? "bg-rose-50 border-rose-200 text-rose-600 dark:bg-rose-950/30 dark:border-rose-900/50 dark:text-rose-400" 
+              : "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-900/50 dark:text-emerald-400"
+          } transition-all`}
         >
-          {toast.msg}
+          <div className="flex items-center gap-3">
+             <span className="text-xl">{toast.type === "error" ? "⚠️" : "✔️"}</span>
+             {toast.msg}
+          </div>
         </div>
       )}
     </Screen>
@@ -460,11 +451,11 @@ export default function StudentDashboard() {
 
 function Screen({ children }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 text-white p-4 md:p-6">
-      <div className="mx-auto max-w-7xl">
+    <div className="min-h-screen bg-[var(--bg-page-from)] bg-gradient-to-br from-[var(--bg-page-from)] via-[var(--bg-page-mid)] to-[var(--bg-page-to)] text-[var(--text-main)] p-4 md:p-6 transition-colors duration-300">
+      <div className="mx-auto max-w-7xl relative">
         {/* ambient glows */}
-        <div className="pointer-events-none fixed -top-24 -left-24 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
-        <div className="pointer-events-none fixed -bottom-24 -right-24 h-64 w-64 rounded-full bg-indigo-600/20 blur-3xl" />
+        <div className="pointer-events-none fixed -top-24 -left-24 h-64 w-64 rounded-full bg-indigo-500/5 blur-3xl" />
+        <div className="pointer-events-none fixed -bottom-24 -right-24 h-64 w-64 rounded-full bg-indigo-500/5 blur-3xl" />
         {children}
       </div>
     </div>
@@ -475,19 +466,19 @@ function Header({ profile, onOpenProfile, onLogout, attempts }) {
   const user = auth.currentUser;
 
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between transition-colors">
       <div className="flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 font-bold shadow-lg shadow-indigo-500/30">Q</div>
+        <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 font-bold text-white shadow-lg shadow-indigo-500/20">Q</div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Student Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-[var(--text-main)] transition-colors">Student Dashboard</h1>
           <div className="flex items-center gap-3">
-            <p className="text-indigo-300 font-medium text-sm">
+            <p className="text-indigo-500 font-bold text-sm transition-colors">
               Welcome back, {profile?.name || user?.displayName || user?.email}
             </p>
             {attempts?.length > 0 && (
               <button 
                 onClick={() => window.location.href = `/quiz/${attempts[0].quizId}`}
-                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-300 text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20 hover:bg-indigo-500/20 transition-colors"
+                className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider border border-indigo-500/20 hover:bg-indigo-600 hover:text-white transition-all"
                 title={`Retake ${attempts[0].quizTitle || "Last Quiz"}`}
               >
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
@@ -504,7 +495,7 @@ function Header({ profile, onOpenProfile, onLogout, attempts }) {
 
         <button
           onClick={onOpenProfile}
-          className="group relative rounded-full p-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 hover:scale-105 transition-transform"
+          className="group relative rounded-full p-0.5 bg-gradient-to-r from-indigo-500 to-indigo-700 hover:scale-105 transition-transform shadow-lg shadow-indigo-500/20"
           title="Profile & Settings"
         >
           <img
@@ -516,13 +507,13 @@ function Header({ profile, onOpenProfile, onLogout, attempts }) {
               )}&background=0D8ABC&color=fff`
             }
             alt="avatar"
-            className="h-10 w-10 rounded-full object-cover border-2 border-gray-900"
+            className="h-10 w-10 rounded-full object-cover border-2 border-[var(--bg-card)] transition-colors"
           />
         </button>
 
         <button
           onClick={onLogout}
-          className="hidden sm:inline-flex rounded-xl border border-red-900/50 bg-red-950/30 px-4 py-2 text-sm font-bold text-red-400 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:shadow-red-900/40"
+          className="hidden sm:inline-flex rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-2 text-sm font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-500 hover:text-white transition-all shadow-lg shadow-rose-500/10"
         >
           Sign Out
         </button>
@@ -535,7 +526,7 @@ function Header({ profile, onOpenProfile, onLogout, attempts }) {
 
 function Badge({ children }) {
   return (
-    <span className="px-2 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-200">
+    <span className="px-2 py-1 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-main)] text-xs text-[var(--text-dim)] transition-colors">
       {children}
     </span>
   );
@@ -544,7 +535,7 @@ function Badge({ children }) {
 function Section({ title, children }) {
   return (
     <div className="mt-6">
-      <h2 className="mb-3 text-xl font-semibold text-white/90">{title}</h2>
+      <h2 className="mb-3 text-xl font-semibold text-[var(--text-main)] opacity-90">{title}</h2>
       {children}
     </div>
   );
@@ -553,16 +544,16 @@ function Section({ title, children }) {
 function StatCard({ label, value, className = "", icon }) {
   return (
     <div
-      className={`rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-900/80 to-indigo-950/20 backdrop-blur-xl p-5 flex items-center gap-4 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_40px_-15px_rgba(79,70,229,0.3)] hover:border-indigo-500/30 ${className}`}
+      className={`rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-5 flex items-center gap-4 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-lg hover:border-indigo-500/30 transition-colors ${className}`}
     >
-      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+      <div className="flex-shrink-0 w-12 h-12 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 transition-all">
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           {icon}
         </svg>
       </div>
       <div>
-        <div className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</div>
-        <div className="mt-1 text-2xl font-black text-white tracking-tight">{value}</div>
+        <div className="text-xs font-bold uppercase tracking-widest text-[var(--text-dim)]">{label}</div>
+        <div className="mt-1 text-2xl font-black text-[var(--text-main)] tracking-tight transition-colors">{value}</div>
       </div>
     </div>
   );
@@ -575,9 +566,9 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
   const isLimited = maxAttempts > 0 && attemptsMade >= maxAttempts;
 
   const diffColor = 
-    quiz.difficulty === "Easy" ? "text-green-400 border-green-500/30 bg-green-500/10" :
-    quiz.difficulty === "Hard" ? "text-red-400 border-red-500/30 bg-red-500/10" :
-    "text-yellow-400 border-yellow-500/30 bg-yellow-500/10";
+    quiz.difficulty === "Easy" ? "text-emerald-600 dark:text-emerald-400 border-emerald-500/30 bg-emerald-500/5" :
+    quiz.difficulty === "Hard" ? "text-rose-600 dark:text-rose-400 border-rose-500/30 bg-rose-500/5" :
+    "text-amber-600 dark:text-amber-400 border-amber-500/30 bg-amber-500/5";
     
   const timeLabel = quiz.timer?.mode === "perQuestion" 
     ? `${quiz.timer.time}s / Q` 
@@ -587,8 +578,8 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
 
   return (
     <div
-      className={`relative overflow-hidden group rounded-2xl border bg-gray-900/70 backdrop-blur-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_10px_40px_-15px_rgba(79,70,229,0.5)] ${
-        isLimited ? "border-red-900/30 grayscale-[0.5]" : "border-gray-800 hover:border-indigo-500/50"
+      className={`relative overflow-hidden group rounded-2xl border bg-[var(--bg-card)] backdrop-blur-xl p-5 flex flex-col gap-3 transition-all duration-300 hover:translate-y-[-2px] hover:shadow-xl ${
+        isLimited ? "border-rose-900/20 grayscale-[0.5]" : "border-[var(--border-main)] hover:border-indigo-500/40"
       } ${className}`}
       style={style}
     >
@@ -597,19 +588,19 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
       <div className="flex items-start justify-between gap-3 relative z-10">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors line-clamp-1">{quiz.title}</h3>
+            <h3 className="text-lg font-bold text-[var(--text-main)] group-hover:text-indigo-600 transition-colors line-clamp-1">{quiz.title}</h3>
             {attemptsMade > 0 && (
-              <span className="flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-400 border border-green-500/20">
+              <span className="flex items-center gap-1 rounded-full bg-emerald-500/5 px-2 py-0.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/10 transition-colors">
                 Best: {bestScore}%
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-400 line-clamp-2">{quiz.description || "—"}</p>
+          <p className="text-sm text-[var(--text-dim)] line-clamp-2">{quiz.description || "—"}</p>
         </div>
       </div>
       
       <div className="flex flex-wrap items-center gap-2 mt-1 relative z-10">
-        <span className="px-2 py-1 rounded-md bg-gray-800/80 border border-gray-700 text-[10px] uppercase tracking-wider font-semibold text-gray-300">
+        <span className="px-2 py-1 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-main)] text-[10px] uppercase tracking-wider font-semibold text-[var(--text-dim)]">
           {quiz.department} • {quiz.academicYear}
         </span>
         {quiz.difficulty && (
@@ -617,7 +608,7 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
             {quiz.difficulty}
           </span>
         )}
-        <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-800/80 border border-gray-700 text-[10px] uppercase tracking-wider font-semibold text-gray-300">
+        <span className="flex items-center gap-1 px-2 py-1 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-main)] text-[10px] uppercase tracking-wider font-semibold text-[var(--text-dim)]">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
           </svg>
@@ -626,27 +617,27 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
         
         {maxAttempts > 0 && (
           <span className={`px-2 py-1 rounded-md border text-[10px] uppercase tracking-wider font-semibold ${
-            isLimited ? "bg-red-950/40 border-red-800/50 text-red-400" : "bg-gray-800/80 border-gray-700 text-gray-400"
+            isLimited ? "bg-rose-950/20 border-rose-800/40 text-rose-500" : "bg-[var(--bg-subtle)] border border-[var(--border-main)] text-[var(--text-dim)]"
           }`}>
             {attemptsMade} / {maxAttempts} Attempts
           </span>
         )}
       </div>
 
-      <div className="mt-auto pt-3 flex items-center justify-between border-t border-gray-800/50 relative z-10">
-        <span className="text-xs text-gray-400 font-medium">
+      <div className="mt-auto pt-3 flex items-center justify-between border-t border-[var(--border-main)] relative z-10 transition-colors">
+        <span className="text-xs text-[var(--text-dim)] font-medium">
           By {quiz.createdByName || quiz.createdBy?.slice(0, 6) || "Teacher"}
         </span>
         
         {isLimited ? (
-          <div className="flex items-center gap-2 text-[11px] font-bold text-red-400/80 bg-red-950/20 px-3 py-2 rounded-xl border border-red-900/30">
+          <div className="flex items-center gap-2 text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-rose-500/5 px-3 py-2 rounded-xl border border-rose-500/10 transition-colors">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0110 0v4"></path></svg>
             Limit Reached
           </div>
         ) : (
           <button
             onClick={onStart}
-            className="rounded-lg bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-900/20 text-white px-5 py-2 text-sm font-bold transition-all hover:scale-105 active:scale-95"
+            className="rounded-lg bg-indigo-600 hover:bg-indigo-500 shadow-lg shadow-indigo-500/20 text-white px-5 py-2 text-sm font-bold transition-all hover:scale-105 active:scale-95"
           >
             {attemptsMade > 0 ? "Retake Quiz" : "Start Quiz"}
           </button>
@@ -658,19 +649,19 @@ function QuizCard({ quiz, onStart, stats, className = "", style = {} }) {
 
 function Benefit({ chip, text }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-4 transition group-hover:translate-y-[-1px]">
-      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-gray-700 bg-gray-800/70 px-2.5 py-1 text-[10px] font-semibold text-gray-200">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-400" />
+    <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] p-4 transition group-hover:translate-y-[-1px] transition-colors">
+      <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-[var(--border-main)] bg-[var(--bg-muted)] px-2.5 py-1 text-[10px] font-semibold text-[var(--text-main)]">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-blue-500" />
         {chip}
       </div>
-      <p className="text-sm text-gray-300">{text}</p>
+      <p className="text-sm text-[var(--text-dim)]">{text}</p>
     </div>
   );
 }
 
 function Empty({ text }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-6 text-gray-400 text-sm">
+    <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-[var(--text-dim)] text-sm transition-colors">
       {text}
     </div>
   );
@@ -678,18 +669,18 @@ function Empty({ text }) {
 
 function CardSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-5 animate-pulse">
-      <div className="h-3 w-24 bg-gray-800 rounded" />
-      <div className="mt-3 h-8 w-16 bg-gray-800 rounded" />
+    <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] p-5 animate-pulse transition-colors">
+      <div className="h-3 w-24 bg-[var(--bg-subtle)] rounded" />
+      <div className="mt-3 h-8 w-16 bg-[var(--bg-subtle)] rounded" />
     </div>
   );
 }
 
 function RowSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-5 animate-pulse">
-      <div className="h-4 w-1/3 bg-gray-800 rounded" />
-      <div className="mt-3 h-4 w-1/2 bg-gray-800 rounded" />
+    <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] p-5 animate-pulse transition-colors">
+      <div className="h-4 w-1/3 bg-[var(--bg-subtle)] rounded" />
+      <div className="mt-3 h-4 w-1/2 bg-[var(--bg-subtle)] rounded" />
     </div>
   );
 }
@@ -822,32 +813,32 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
 
   return (
     <>
-      <div className={`fixed inset-0 bg-black/40 transition-opacity z-40 ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} onClick={onClose} />
-      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-gray-950/95 backdrop-blur-xl border-l border-gray-800 transition-transform duration-300 z-50 ${open ? "translate-x-0" : "translate-x-full"}`}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h3 className="text-lg font-semibold">Your Profile</h3>
-          <button onClick={onClose} className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 hover:bg-gray-700 transition font-bold text-xs uppercase">Close</button>
+      <div className={`fixed inset-0 bg-[var(--bg-overlay)] transition-opacity z-40 ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`} onClick={onClose} />
+      <div className={`fixed top-0 right-0 h-full w-full max-w-md bg-[var(--bg-card)] backdrop-blur-xl border-l border-[var(--border-main)] transition-transform duration-300 z-50 ${open ? "translate-x-0" : "translate-x-full"}`}>
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)]">
+          <h3 className="text-lg font-semibold text-[var(--text-main)]">Your Profile</h3>
+          <button onClick={onClose} className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] px-3 py-1.5 hover:bg-[var(--bg-muted)] text-[var(--text-dim)] transition font-bold text-xs uppercase">Close</button>
         </div>
 
         <div className="h-[calc(100vh-58px)] overflow-y-auto overscroll-contain p-4">
           <div className="flex flex-col items-center mt-4 mb-8">
             <div className="relative group cursor-pointer">
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-full blur opacity-25" />
-              <img src={avatarSrc} alt="avatar" className="relative h-24 w-24 rounded-full object-cover border-2 border-gray-800 shadow-xl" />
-              <div className="absolute inset-0 bg-black/50 rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => fileRef.current?.click()} className="text-white text-[10px] font-bold uppercase tracking-wider mb-1">Upload</button>
-                <button onClick={useGooglePhoto} className="text-gray-300 text-[9px] uppercase tracking-wider">Google</button>
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-indigo-700 rounded-full blur opacity-25" />
+              <img src={avatarSrc} alt="avatar" className="relative h-24 w-24 rounded-full object-cover border-2 border-[var(--border-main)] shadow-xl" />
+              <div className="absolute inset-0 bg-[var(--bg-overlay)] rounded-full flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onClick={() => fileRef.current?.click()} className="text-white text-[10px] font-bold uppercase tracking-wider mb-1 hover:scale-110 transition-transform">Upload</button>
+                <button onClick={useGooglePhoto} className="text-white/80 text-[9px] uppercase tracking-wider hover:scale-110 transition-transform">Google</button>
                 <input ref={fileRef} onChange={(e) => handleUpload(e.target.files?.[0])} type="file" accept="image/*" className="hidden" />
               </div>
             </div>
-            <h2 className="mt-4 text-xl font-bold tracking-tight text-white">{profile?.name}</h2>
-            <p className="text-sm text-indigo-400 font-medium">{profile?.regNo || "No Reg No"}</p>
+            <h2 className="mt-4 text-xl font-bold tracking-tight text-[var(--text-main)]">{profile?.name}</h2>
+            <p className="text-sm text-indigo-500 font-medium">{profile?.regNo || "No Reg No"}</p>
           </div>
 
           <div className="space-y-6">
             <div>
-              <h4 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-3 px-1">Academic Context</h4>
-              <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-1">
+              <h4 className="text-xs uppercase tracking-widest text-[var(--text-muted)] font-bold mb-3 px-1 transition-colors">Academic Context</h4>
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-main)] rounded-2xl p-1 transition-colors">
                 <LockedField label="Institute" value={profile?.institute} />
                 <LockedField label="Department" value={DEPARTMENTS.find(d => d.value === profile?.department)?.label || profile?.department} />
                 <LockedField label="Academic Year" value={profile?.academicYear} />
@@ -855,26 +846,26 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
             </div>
 
             <div>
-              <h4 className="text-xs uppercase tracking-widest text-gray-500 font-bold mb-3 px-1">Personal Info</h4>
-              <div className="bg-gray-900/50 border border-gray-800 rounded-2xl p-1">
+              <h4 className="text-xs uppercase tracking-widest text-[var(--text-muted)] font-bold mb-3 px-1 transition-colors">Personal Info</h4>
+              <div className="bg-[var(--bg-subtle)] border border-[var(--border-main)] rounded-2xl p-1 transition-colors">
                 <LockedField label="Full Name" value={profile?.name} />
                 <LockedField label="Date of Birth" value={profile?.dob} />
                 <LockedField label="Gender" value={profile?.gender} />
               </div>
             </div>
 
-            <div className="pt-6 flex flex-wrap gap-3 justify-between items-center border-t border-gray-800/50">
+            <div className="pt-6 flex flex-wrap gap-3 justify-between items-center border-t border-[var(--border-main)] transition-colors">
               <button
                 type="button"
                 onClick={() => setReqOpen(true)}
                 disabled={checkingPending || hasPending}
-                className={`rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-all ${hasPending ? "bg-gray-800 text-gray-400 cursor-not-allowed border-gray-700" : "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500 hover:text-white"}`}
+                className={`rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide transition-all ${hasPending ? "bg-[var(--bg-muted)] text-[var(--text-muted)] cursor-not-allowed border-[var(--border-main)]" : "bg-indigo-500/10 text-indigo-500 border border-indigo-500/20 hover:bg-indigo-600 hover:text-white"}`}
               >
                 {hasPending ? "Request Pending" : "Request Edit"}
               </button>
               <div className="flex gap-2">
-                <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-gray-400 hover:bg-gray-800 transition-colors">Cancel</button>
-                <button disabled={saving} onClick={save} className="rounded-xl px-6 py-2.5 text-xs font-bold uppercase tracking-wide bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/40">
+                <button onClick={onClose} className="rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] hover:bg-[var(--bg-subtle)] transition-colors">Cancel</button>
+                <button disabled={saving} onClick={save} className="rounded-xl px-6 py-2.5 text-xs font-bold uppercase tracking-wide bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95">
                   {saving ? "Saving…" : "Save"}
                 </button>
               </div>
@@ -885,17 +876,17 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
 
       {reqOpen && (
         <div className="fixed inset-0 z-[60] grid place-items-center p-4">
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setReqOpen(false)} />
-          <div className="relative w-full max-w-lg rounded-2xl border border-gray-800 bg-gray-900 shadow-2xl overflow-hidden animate-[fadeIn_200ms_ease]">
-            <div className="p-5 border-b border-gray-800 sticky top-0 bg-gray-900 z-10">
-              <h4 className="text-lg font-bold">Request Edit Permission</h4>
-              <p className="text-sm text-gray-400 mt-1">Select fields and enter the new data for teacher approval.</p>
+          <div className="absolute inset-0 bg-[var(--bg-overlay)] backdrop-blur-sm" onClick={() => setReqOpen(false)} />
+          <div className="relative w-full max-w-lg rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-2xl overflow-hidden animate-[fadeIn_200ms_ease] transition-colors">
+            <div className="p-5 border-b border-[var(--border-main)] sticky top-0 bg-[var(--bg-card)] z-10">
+              <h4 className="text-lg font-bold text-[var(--text-main)]">Request Edit Permission</h4>
+              <p className="text-sm text-[var(--text-dim)] mt-1">Select fields and enter the new data for teacher approval.</p>
             </div>
             
-            <div className="p-5 max-h-[400px] overflow-y-auto custom-scrollbar">
+            <div className="p-5 max-h-[400px] overflow-y-auto overscroll-contain transition-colors">
               <div className="flex flex-col gap-3">
                 {LOCKED_FIELDS.map((f) => (
-                  <div key={f} className="flex flex-col gap-2 rounded-xl bg-gray-800/40 p-3 border border-gray-700/50">
+                  <div key={f} className="flex flex-col gap-2 rounded-xl bg-[var(--bg-subtle)] p-3 border border-[var(--border-main)] transition-colors">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -903,7 +894,7 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
                         checked={!!reqFields[f]}
                         onChange={(e) => setReqFields({ ...reqFields, [f]: e.target.checked })}
                       />
-                      <span className="text-xs font-bold uppercase tracking-wider text-gray-300">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-dim)]">
                         {f === "regNo" ? "Register Number" : f === "dob" ? "Date of Birth" : f === "academicYear" ? "Academic Year" : f}
                       </span>
                     </label>
@@ -914,7 +905,7 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
                           <select 
                             value={reqValues[f]} 
                             onChange={(e) => setReqValues({ ...reqValues, [f]: e.target.value })}
-                            className="w-full rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full rounded-lg bg-[var(--bg-input)] border border-[var(--border-input)] px-3 py-2 text-sm text-[var(--text-main)] outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                           >
                             {DEPARTMENTS.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
                           </select>
@@ -922,7 +913,7 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
                           <select 
                             value={reqValues[f]} 
                             onChange={(e) => setReqValues({ ...reqValues, [f]: e.target.value })}
-                            className="w-full rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full rounded-lg bg-[var(--bg-input)] border border-[var(--border-input)] px-3 py-2 text-sm text-[var(--text-main)] outline-none focus:ring-2 focus:ring-indigo-500 transition-colors"
                           >
                             {["Male", "Female", "Other", "Prefer not to say"].map(g => <option key={g} value={g}>{g}</option>)}
                           </select>
@@ -932,7 +923,7 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
                             value={reqValues[f]}
                             onChange={(e) => setReqValues({ ...reqValues, [f]: e.target.value })}
                             placeholder={`New ${f}...`}
-                            className="w-full rounded-lg bg-gray-900 border border-gray-700 px-3 py-2 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-indigo-500 [color-scheme:dark]"
+                            className="w-full rounded-lg bg-[var(--bg-input)] border border-[var(--border-input)] px-3 py-2 text-sm text-[var(--text-main)] outline-none focus:ring-2 focus:ring-indigo-500 transition-all transition-colors"
                           />
                         )}
                       </div>
@@ -942,20 +933,20 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
               </div>
 
               <div className="mt-6">
-                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">Reason for Request</label>
+                <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">Reason for Request</label>
                 <textarea
                   value={reqReason}
                   onChange={(e) => setReqReason(e.target.value)}
                   rows={3}
-                  className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-sm text-gray-100 outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                  className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] px-4 py-3 text-sm text-[var(--text-main)] outline-none focus:ring-2 focus:ring-indigo-500 transition-all transition-colors"
                   placeholder="Explain why you need this change..."
                 />
               </div>
             </div>
 
-            <div className="p-5 border-t border-gray-800 bg-gray-900/80 flex justify-end gap-3 sticky bottom-0 z-10">
-              <button onClick={() => setReqOpen(false)} className="rounded-xl border border-gray-700 bg-gray-800 px-5 py-2.5 text-xs font-bold uppercase text-gray-200 hover:bg-gray-700 transition">Cancel</button>
-              <button onClick={submitRequest} disabled={saving} className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 text-xs font-bold uppercase transition disabled:bg-gray-700">{saving ? "Submitting..." : "Submit Request"}</button>
+            <div className="p-5 border-t border-[var(--border-main)] bg-[var(--bg-card)] flex justify-end gap-3 sticky bottom-0 z-10 transition-colors">
+              <button onClick={() => setReqOpen(false)} className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] px-5 py-2.5 text-xs font-bold uppercase text-[var(--text-dim)] hover:bg-[var(--bg-muted)] transition-all transition-colors">Cancel</button>
+              <button onClick={submitRequest} disabled={saving} className="rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-2.5 text-xs font-bold uppercase transition disabled:bg-[var(--bg-muted)] disabled:text-[var(--text-muted)]">{saving ? "Submitting..." : "Submit Request"}</button>
             </div>
           </div>
         </div>
@@ -966,11 +957,11 @@ function ProfileDrawer({ open, onClose, profile, attempts }) {
 
 function LockedField({ label, value }) {
   return (
-    <div className="flex flex-col p-3 border-b border-gray-800/50 last:border-0">
-      <label className="mb-1 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+    <div className="flex flex-col p-3 border-b border-[var(--border-main)] last:border-0 transition-colors">
+      <label className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] opacity-70">
         {label}
       </label>
-      <div className="text-sm font-medium text-gray-200">
+      <div className="text-sm font-medium text-[var(--text-main)] transition-colors">
         {value || "—"}
       </div>
     </div>

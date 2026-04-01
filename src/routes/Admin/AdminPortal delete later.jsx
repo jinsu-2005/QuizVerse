@@ -17,20 +17,22 @@ import {
   where,
 } from "firebase/firestore";
 
-// Sub-modules
-import { SidebarLayout } from "./DashboardComponents/Sidebar.jsx";
-import { HomeSection } from "./DashboardComponents/Home.jsx";
-import { AnalyticsSection } from "./DashboardComponents/Analytics.jsx";
-import { StudentRequestsSection } from "./DashboardComponents/Requests.jsx";
-import { CreateQuizSection } from "./DashboardComponents/CreateQuiz.jsx";
-import { QuizListSection } from "./DashboardComponents/QuizList.jsx";
-import { TeacherProfileDrawer } from "./DashboardComponents/Profile.jsx";
-import { StudentManagementSection } from "./DashboardComponents/Students.jsx";
-import { StaffManagementSection } from "./DashboardComponents/Staff.jsx";
-import { PlaceholderView, SelectSmall } from "./DashboardComponents/UI.jsx";
-import { MIN_Q, MAX_Q, MIN_OPT, MAX_OPT } from "./DashboardComponents/Utils.js";
+// Sub-modules (Shared from Teacher)
+import { StudentManagementSection } from "../Teacher/DashboardComponents/Students.jsx";
+import { StaffManagementSection } from "../Teacher/DashboardComponents/Staff.jsx";
+import { QuizListSection } from "../Teacher/DashboardComponents/QuizList.jsx";
+import { TeacherProfileDrawer } from "../Teacher/DashboardComponents/Profile.jsx";
 
-export default function TeacherDashboard() {
+// Specific Admin modules
+import { SidebarLayout } from "./DashboardComponents/Sidebar.jsx";
+import { AdminHomeSection } from "./DashboardComponents/Home.jsx";
+import { UserManagementSection } from "./DashboardComponents/UserManagement.jsx";
+import { DepartmentManagementSection } from "./DashboardComponents/Departments.jsx";
+import { ActivityLogsSection } from "./DashboardComponents/ActivityLogs.jsx";
+import { SettingsSection } from "./DashboardComponents/Settings.jsx";
+import { AnalyticsSection } from "./DashboardComponents/Analytics.jsx";
+
+export default function AdminDashboard() {
   const { fbUser, profile: initialProfile, loading } = useAuth();
   const nav = useNavigate();
   const [profile, setProfile] = useState(initialProfile);
@@ -88,9 +90,11 @@ export default function TeacherDashboard() {
     if (loading) return;
     if (!fbUser) return nav("/signin", { replace: true });
     if (!profile || !profile.role) return nav("/role", { replace: true });
-    
-    const validRoles = ["teacher", "super_admin", "inst_admin", "dept_admin"];
-    if (!validRoles.includes(profile.role)) return nav("/student", { replace: true });
+
+    const validRoles = ["super_admin", "inst_admin", "dept_admin"];
+    if (!validRoles.includes(profile.role)) {
+      return nav("/teacher", { replace: true });
+    }
   }, [fbUser, profile, loading, nav]);
 
   // Autosave Draft logic
@@ -272,13 +276,11 @@ export default function TeacherDashboard() {
       activeTab={activeTab} onTabSelect={setActiveTab} requestsCount={requests.length}
     >
       <div className="w-full flex-1 max-w-7xl mx-auto px-1 md:px-0">
-        {activeTab === "home" && <HomeSection quizzes={quizzes} requestsCount={requests.length} profile={profile} fbUser={fbUser} />}
-        {activeTab === "analytics" && <AnalyticsSection quizzes={quizzes} />}
-        {activeTab === "students" && <StudentManagementSection profile={profile} />}
+        {activeTab === "home" && <AdminHomeSection profile={profile} />}
+        {activeTab === "users" && (profile?.role === "super_admin" || profile?.role === "inst_admin") && <UserManagementSection profile={profile} />}
+        {activeTab === "departments" && (profile?.role === "super_admin" || profile?.role === "inst_admin") && <DepartmentManagementSection profile={profile} />}
         {activeTab === "teachers" && <StaffManagementSection profile={profile} />}
-        {activeTab === "institutes" && <PlaceholderView title="Collegiate Governance" />}
-        {activeTab === "admins" && <PlaceholderView title="Global Authority" />}
-        {activeTab === "departments" && <PlaceholderView title="Faculty Hierarchy" />}
+        {activeTab === "students" && <StudentManagementSection profile={profile} />}
         {activeTab === "quizzes" && (
            <QuizListSection 
              search={search} setSearch={setSearch} filterDept={filterDept} setFilterDept={setFilterDept} 
@@ -288,24 +290,9 @@ export default function TeacherDashboard() {
              onEdit={editQuiz}
            />
         )}
-        {activeTab === "requests" && <StudentRequestsSection requests={requests} busyReqs={busyReqs} />}
-        {activeTab === "create" && (
-           <CreateQuizSection
-             saveStatus={saveStatus} form={form} setForm={setForm} questions={questions} setQuestions={setQuestions}
-             addQuestion={() => setQuestions([...questions, { question: "", options: ["", "", "", ""], answerIndex: 0, explanation: "" }])}
-             removeQuestion={(i) => setQuestions(questions.filter((_, idx) => idx !== i))}
-             updateQuestion={(i, p) => setQuestions(qs => { const n=[...qs]; n[i]={...n[i], ...p}; return n; })}
-             updateOption={(qi, oi, v) => setQuestions(qs => { const n=[...qs]; const o=[...n[qi].options]; o[oi]=v; n[qi].options=o; return n; })}
-             saveQuiz={saveQuiz} busyCreate={busyCreate} profile={profile}
-             difficulty={difficulty} setDifficulty={setDifficulty} timerMode={timerMode} setTimerMode={setTimerMode}
-             timeValue={timeValue} setTimeValue={setTimeValue} maxAttempts={maxAttempts} setMaxAttempts={setMaxAttempts}
-             aiMode={aiMode} setAiMode={setAiMode} topic={topic} setTopic={setTopic} file={file} setFile={setFile}
-             onPickFile={onPickFile} fileRef={fileRef} instruction={instruction} setInstruction={setInstruction}
-             numQuestions={numQuestions} setNumQuestions={setNumQuestions} numOptions={numOptions} setNumOptions={setNumOptions}
-             aiLoading={aiLoading} aiError={aiError} generateWithAI={generateWithAI} clampedNumQ={clampedNumQ} clampedNumOpt={clampedNumOpt}
-             generateMode={generateMode} setGenerateMode={setGenerateMode} editingId={editingId} cancelEdit={() => setEditingId(null)} fbUser={fbUser}
-           />
-        )}
+        {activeTab === "analytics" && (profile?.role === "super_admin" || profile?.role === "inst_admin") && <AnalyticsSection quizzes={quizzes} />}
+        {activeTab === "logs" && <ActivityLogsSection profile={profile} />}
+        {activeTab === "settings" && profile?.role === "super_admin" && <SettingsSection />}
       </div>
 
       {toast.msg && (

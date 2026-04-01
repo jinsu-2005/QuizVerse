@@ -1,0 +1,88 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function uid()        { return request.auth.uid; }
+
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(uid())).data.role;
+    }
+
+    function isSuperAdmin() { return isSignedIn() && getRole() == 'super_admin'; }
+    function isInstAdmin()  { return isSignedIn() && getRole() == 'inst_admin'; }
+    function isDeptAdmin()  { return isSignedIn() && getRole() == 'dept_admin'; }
+    function isTeacher()    { return isSignedIn() && getRole() == 'teacher'; }
+    function isAdmin()      { return isSuperAdmin() || isInstAdmin() || isDeptAdmin(); }
+
+    match /users/{userId} {
+      // ✅ MUST be true (no auth) — SignIn.jsx resolves regNo/collegeId → email BEFORE login
+      allow read: if true;
+
+      // Users can update their own doc (profile completion, first-time login)
+      allow update: if isSignedIn() && userId == uid();
+
+      // Admins can create/write user docs
+      allow write: if isSuperAdmin();
+      allow write: if isInstAdmin() && (
+        !exists(/databases/$(database)/documents/users/$(userId)) ||
+        get(/databases/$(database)/documents/users/$(userId)).data.role != 'super_admin'
+      );
+      allow write: if isDeptAdmin() && (
+        request.resource.data.department == get(/databases/$(database)/documents/users/$(uid())).data.department &&
+        (request.resource.data.role == 'teacher' || request.resource.data.role == 'student')
+      );
+      allow write: if isTeacher() && (
+        request.resource.data.role == 'student'
+      );
+    }
+
+    match /departments/{deptId} {
+      allow read: if true; // Needed for login-time dept lookups & UI dropdowns
+      allow write: if isSuperAdmin() || isInstAdmin();
+    }
+
+    match /quizzes/{quizId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && (
+        request.resource.data.createdBy == uid() || isAdmin()
+      );
+      allow update, delete: if isSignedIn() && (
+        resource.data.createdBy == uid() || isAdmin()
+      );
+    }
+
+    match /quizAttempts/{attemptId} {
+      allow create: if isSignedIn() && request.resource.data.studentId == uid();
+      allow read:   if isSignedIn() && (
+        resource.data.studentId == uid() || isTeacher() || isAdmin()
+      );
+      allow update, delete: if isSuperAdmin() || isInstAdmin();
+    }
+
+    match /editRequests/{requestId} {
+      allow create: if isSignedIn() && request.resource.data.userId == uid();
+      allow read:   if isSignedIn() && (
+        resource.data.userId == uid() || isTeacher() || isAdmin()
+      );
+      allow update: if isSignedIn() && (isTeacher() || isAdmin());
+      allow delete: if isSuperAdmin();
+    }
+
+    match /teacherResults/{teacherUid} {
+      allow read:  if isSignedIn() && (teacherUid == uid() || isAdmin());
+      allow write: if isSuperAdmin();
+    }
+
+    match /activityLogs/{logId} {
+      allow read:   if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isSuperAdmin();
+    }
+
+    // Fallback — super admin controls everything
+    match /{document=**} {
+      allow read, write: if isSuperAdmin();
+    }
+  }
+}

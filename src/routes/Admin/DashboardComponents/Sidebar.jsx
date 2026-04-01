@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { auth } from "../../../firebase";
 import { signOut } from "firebase/auth";
-import { UserAvatar, ThemeToggle } from "./UI.jsx";
+import { UserAvatar, ThemeToggle } from "../../Teacher/DashboardComponents/UI.jsx";
 
 export function SidebarLayout({ children, profile, fbUser, onOpenProfile, activeTab, onTabSelect, requestsCount }) {
   const nav = useNavigate();
@@ -17,14 +17,30 @@ export function SidebarLayout({ children, profile, fbUser, onOpenProfile, active
 
   const navItems = [
     { id: "home", label: "Dashboard", shortLabel: "Home", icon: "🏠" },
-    ...(profile?.role === "dept_admin" ? [
-      { id: "teachers", label: "Faculty", shortLabel: "Staff", icon: "🎓" },
+    // Users tab — Super Admin and Inst Admin only
+    ...(profile?.role === "super_admin" || profile?.role === "inst_admin" ? [
+      { id: "users", label: "Users", shortLabel: "Users", icon: "👥" },
     ] : []),
-    { id: "quizzes", label: "My Quizzes", shortLabel: "Quizzes", icon: "📚" },
-    { id: "create", label: "Create Quiz", shortLabel: "Forge", icon: "✍️" },
-    { id: "requests", label: "Requests", shortLabel: "Reqs", icon: "📋", count: requestsCount },
-    { id: "analytics", label: "Analytics", shortLabel: "Stats", icon: "📊" },
-    { id: "students", label: "Students", shortLabel: "People", icon: "👥" },
+    // Departments tab — Super Admin and Inst Admin only
+    ...(profile?.role === "super_admin" || profile?.role === "inst_admin" ? [
+      { id: "departments", label: "Departments", shortLabel: "Depts", icon: "🏢" },
+    ] : []),
+    // Teachers — all admin roles
+    { id: "teachers", label: "Teachers", shortLabel: "Staff", icon: "👨‍🏫" },
+    // Students — all admin roles
+    { id: "students", label: "Students", shortLabel: "Students", icon: "🎓" },
+    // Quizzes — all admin roles
+    { id: "quizzes", label: "Quizzes", shortLabel: "Quizzes", icon: "📝" },
+    // Analytics — Super Admin and Inst Admin only
+    ...(profile?.role === "super_admin" || profile?.role === "inst_admin" ? [
+      { id: "analytics", label: "Analytics", shortLabel: "Stats", icon: "📊" },
+    ] : []),
+    // Logs — all admin roles
+    { id: "logs", label: "Activity Logs", shortLabel: "Logs", icon: "📜" },
+    // Settings — Super Admin only
+    ...(profile?.role === "super_admin" ? [
+      { id: "settings", label: "Settings", shortLabel: "Config", icon: "⚙️" },
+    ] : []),
   ];
 
   const handleNav = (id) => {
@@ -84,8 +100,10 @@ export function SidebarLayout({ children, profile, fbUser, onOpenProfile, active
               verified={true} 
             />
             <div className="flex-1 min-w-0">
-               <div className="text-sm font-bold text-[var(--text-main)] truncate tracking-tight mb-0.5">{profile?.name || fbUser?.displayName || "Teacher"}</div>
-               <div className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">Faculty Settings</div>
+               <div className="text-sm font-bold text-[var(--text-main)] truncate tracking-tight mb-0.5">{profile?.name || fbUser?.displayName || "Admin"}</div>
+               <div className="text-[9px] font-bold text-[var(--text-dim)] uppercase tracking-wider">
+                 {profile?.role === "super_admin" ? "Super Admin" : profile?.role === "inst_admin" ? "Institutional Admin" : "Department Admin"}
+               </div>
             </div>
             <span className="text-[var(--text-dim)] group-hover:translate-x-1 transition-transform group-hover:text-indigo-500">→</span>
           </div>
@@ -109,7 +127,6 @@ export function SidebarLayout({ children, profile, fbUser, onOpenProfile, active
              <span className="font-bold text-[var(--text-main)] uppercase tracking-tighter text-lg">QuizVerse</span>
            </div>
            <div className="flex items-center gap-4">
-              <ThemeToggle />
               <button onClick={() => setShowMobileMenu(true)} className="p-2.5 rounded-xl bg-[var(--bg-subtle)] text-[var(--text-dim)] border border-[var(--border-main)] active:scale-95 transition-all">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" /></svg>
               </button>

@@ -17,6 +17,7 @@ export function fmtDate(ts) {
 }
 
 export const DEPARTMENTS = [
+  { label: "First Year - Foundation (FY)", value: "FY" },
   { label: "Information Technology (IT)", value: "IT" },
   { label: "Computer Science and Engineering (CSE)", value: "CSE" },
   { label: "Electronics and Communication Engineering (ECE)", value: "ECE" },

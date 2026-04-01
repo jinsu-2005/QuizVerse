@@ -73,7 +73,7 @@ export function HomeSection({ quizzes, requestsCount, profile, fbUser }) {
             </div>
             
             <div className="flex flex-col gap-2 shrink-0">
-               <button className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-6 py-3 rounded-xl text-sm font-bold shadow-sm transition-all hover:opacity-90">
+               <button className="px-6 py-3 rounded-xl text-sm font-bold shadow-sm transition-all hover:opacity-90 bg-[var(--contrast-surface)] text-[var(--contrast-text)]">
                   Edit Profile
                </button>
                <button className="bg-[var(--bg-card)] text-[var(--text-dim)] border border-[var(--border-main)] px-6 py-3 rounded-xl text-sm font-bold transition-all hover:bg-[var(--bg-subtle)]">

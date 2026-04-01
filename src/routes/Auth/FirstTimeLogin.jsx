@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext.jsx";
-import { db } from "../../firebase.js";
+import { db, auth } from "../../firebase.js";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { updatePassword } from "firebase/auth";
 
 /* ── Constants ───────────────────────────────────────── */
 const DEPARTMENTS = [
+  { label: "First Year - Foundation (FY)",                        value: "FY"    },
   { label: "Information Technology (IT)",                         value: "IT"    },
   { label: "Computer Science and Engineering (CSE)",              value: "CSE"   },
   { label: "Electronics and Communication Engineering (ECE)",     value: "ECE"   },
@@ -50,8 +52,6 @@ export default function FirstTimeLogin() {
   const { fbUser, profile, logout } = useAuth();
   const nav = useNavigate();
 
-  const isTeacher = profile?.role === "teacher";
-
   const [form, setForm] = useState({
     name:         "",
     email:        "",
@@ -63,6 +63,7 @@ export default function FirstTimeLogin() {
     yearOfStudy:  "",
     regNo:        "",
     collegeId:    "",
+    newPassword:  "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -87,11 +88,22 @@ export default function FirstTimeLogin() {
     });
   }, [profile, fbUser]);
 
+  const isAd = ["super_admin", "inst_admin"].includes(profile?.role);
+  const isDeptAd = profile?.role === "dept_admin";
+  const isTeacher = profile?.role === "teacher";
+  const isStudent = profile?.role === "student";
+
   /* Auto-navigate when Firestore confirms verified=true */
   useEffect(() => {
     if (profile?.verified === true) {
-      const dest = profile.role === "teacher" ? "/teacher" : "/student";
-      nav(dest, { replace: true });
+      let dest = "/student";
+      if (profile.role === "super_admin") dest = "/admin";
+      else if (profile.role === "inst_admin") dest = "/inst-admin";
+      else if (profile.role === "dept_admin") dest = "/dept-admin";
+      else if (profile.role === "teacher") dest = "/teacher";
+
+      setSaveSuccess(true);
+      setTimeout(() => nav(dest, { replace: true }), 1500);
     }
   }, [profile?.verified, profile?.role]);
 
@@ -106,15 +118,21 @@ export default function FirstTimeLogin() {
     if (!form.email.trim()) { setError("Email is required.");         return; }
     if (!form.gender)       { setError("Gender is required.");        return; }
     if (!form.dob)          { setError("Date of birth is required."); return; }
-    if (!form.department)   { setError("Department is required.");    return; }
 
-    if (!isTeacher) {
+    if (isStudent) {
       if (!form.regNo.trim())   { setError("Register Number is required.");  return; }
       if (!form.academicYear)   { setError("Academic Year is required.");    return; }
       if (!form.yearOfStudy)    { setError("Year of Study is required.");    return; }
       if (!form.phone.trim())   { setError("Phone number is required.");     return; }
-    } else {
-      if (!form.collegeId.trim()) { setError("College ID is required."); return; }
+      if (!form.department)     { setError("Department is required.");       return; }
+    } else if (isTeacher || isDeptAd) {
+      if (isTeacher && !form.collegeId.trim()) { setError("College ID is required."); return; }
+      if (!form.department) { setError("Department is required."); return; }
+    }
+
+    if (!form.newPassword || form.newPassword.length < 6) {
+      setError("Please set a new secure password (at least 6 characters).");
+      return;
     }
 
     setLoading(true);
@@ -126,20 +144,24 @@ export default function FirstTimeLogin() {
         dob:        form.dob,
         gender:     form.gender,
         institute:  INSTITUTE,
-        department: form.department,
+        department: form.department || null,
         verified:   true,
         verifiedAt: serverTimestamp(),
       };
 
-      if (isTeacher) {
-        updateData.collegeId = form.collegeId.trim();
-      } else {
+      if (isStudent) {
         updateData.regNo        = form.regNo.trim();
         updateData.academicYear = form.academicYear;
         updateData.yearOfStudy  = form.yearOfStudy;
+      } else if (isTeacher || isDeptAd) {
+        if (isTeacher) updateData.collegeId = form.collegeId.trim();
       }
 
       await updateDoc(doc(db, "users", fbUser.uid), updateData);
+      
+      // Update the Auth password
+      await updatePassword(auth.currentUser, form.newPassword);
+      
       // Navigation is handled by the useEffect watching profile.verified.
       // The Firestore onSnapshot in AuthContext will deliver the update,
       // which triggers the useEffect above to navigate to the dashboard.
@@ -173,7 +195,7 @@ export default function FirstTimeLogin() {
               : "Verify your student profile to access your dashboard."}
           </p>
           <span className="ftl-role-badge">
-            {isTeacher ? "👨‍🏫 Faculty" : "🎓 Student"}
+            {isTeacher ? "👨‍🏫 Faculty" : isStudent ? "🎓 Student" : isAd ? "🛡️ System Admin" : "🏢 Dept Admin"}
           </span>
         </div>
 
@@ -197,6 +219,13 @@ export default function FirstTimeLogin() {
                 onChange={set("email")} placeholder="your@email.com" required />
             </div>
           </div>
+          
+          <div className="ftl-col-full">
+            <label className="ftl-label">Set New Password <EditTag /></label>
+            <input type="password" className="ftl-input" value={form.newPassword}
+              onChange={set("newPassword")} placeholder="Create a secure new password" required minLength={6} />
+            <span className="text-[10px] text-[var(--text-dim)] uppercase tracking-wider block mt-2 ml-1">Must be at least 6 characters. Mandatory reset to replace generic default passwords.</span>
+          </div>
 
           {/* ── ROW: DOB + Gender ── */}
           <div className="ftl-grid-2">
@@ -216,7 +245,7 @@ export default function FirstTimeLogin() {
           </div>
 
           {/* ── STUDENT FIELDS ── */}
-          {!isTeacher && (
+          {isStudent && (
             <>
               {/* ROW: Register No (locked) + Phone */}
               <div className="ftl-grid-2">
@@ -274,12 +303,11 @@ export default function FirstTimeLogin() {
             </>
           )}
 
-          {/* ── TEACHER FIELDS ── */}
-          {isTeacher && (
+          {/* ── TEACHER / DEPT ADMIN FIELDS ── */}
+          {(isTeacher || isDeptAd) && (
             <>
-              {/* ROW: College ID (locked) + Phone */}
               <div className="ftl-grid-2">
-                <LockedField label="Faculty / College ID" value={form.collegeId || "Set during seeding"} />
+                {isTeacher && <LockedField label="Faculty / College ID" value={form.collegeId || "Set by Admin"} />}
                 <div>
                   <label className="ftl-label">Phone Number</label>
                   <input type="tel" className="ftl-input" value={form.phone}
@@ -287,10 +315,9 @@ export default function FirstTimeLogin() {
                 </div>
               </div>
 
-              {/* Department - full width, always editable for teachers */}
               <div className="ftl-col-full">
                 <div>
-                  <label className="ftl-label">Department <EditTag /></label>
+                  <label className="ftl-label">Assigned Department <EditTag /></label>
                   <select className="ftl-select" value={form.department}
                     onChange={set("department")} required>
                     <option value="">Select Department</option>

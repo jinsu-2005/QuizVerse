@@ -17,76 +17,98 @@
   /* Backgrounds — deep navy blue from the image */
   --bg-main:      #07111f;
   --bg-page-from: #060e1c;
+  --bg-page-mid:  #0a1730;
   --bg-page-to:   #0c1e3a;
-  --bg-card:      #0b1628;
-  --bg-subtle:    #0f1e35;
+  --bg-card:      rgba(11, 22, 40, 0.88);
+  --bg-card-solid:#0b1628;
+  --bg-subtle:    rgba(20, 33, 58, 0.94);
   --bg-muted:     #0a1525;
   --bg-input:     #0d1a2e;
+  --bg-overlay:   rgba(2, 6, 23, 0.62);
 
   /* Text */
   --text-main:    #e8f0fe;
   --text-dim:     #7fa8d0;
   --text-muted:   #3d6080;
+  --text-soft:    #5f7ea6;
 
   /* Borders — very subtle, near invisible */
   --border-main:  rgba(100,160,220,0.08);
   --border-muted: rgba(100,160,220,0.04);
   --border-input: rgba(100,160,220,0.12);
+  --border-strong:rgba(100,160,220,0.18);
 
   /* Accent — the bright blue from the image */
   --accent:       #2d7fea;
   --accent-bright:#4d9ef5;
   --accent-glow:  rgba(45,127,234,0.25);
   --accent-hover: #1a6dd8;
+  --accent-soft:  rgba(45,127,234,0.12);
 
   /* Semantic */
   --color-success: #22c55e;
   --color-error:   #ef4444;
   --color-warn:    #f59e0b;
+  --shadow-soft:   0 24px 60px rgba(2, 6, 23, 0.42);
+  --shadow-panel:  0 20px 48px rgba(2, 6, 23, 0.34);
+  --contrast-surface:#f8fbff;
+  --contrast-text: #081120;
 
   /* Theme toggle */
   --toggle-icon:   #7fa8d0;
   --toggle-border: rgba(100,160,220,0.2);
-  --toggle-bg:     #0f1e35;
+  --toggle-bg:     rgba(15, 30, 53, 0.92);
 
   /* Sun/Moon visibility */
   --sun-scale:    1;
   --moon-scale:   0;
+  color-scheme: dark;
 }
 
 /* ── Light Mode Tokens (when data-theme="light" on <html>) ─ */
 [data-theme="light"] {
-  --bg-main:      #f8fafc;
-  --bg-page-from: #f1f5f9;
-  --bg-page-to:   #e2eaf8;
-  --bg-card:      #ffffff;
-  --bg-subtle:    #f1f5f9;
-  --bg-muted:     #e2e8f0;
-  --bg-input:     #f8fafc;
+  --bg-main:      #eef3fb;
+  --bg-page-from: #f8fbff;
+  --bg-page-mid:  #eef4ff;
+  --bg-page-to:   #dde8fb;
+  --bg-card:      rgba(255, 255, 255, 0.92);
+  --bg-card-solid:#ffffff;
+  --bg-subtle:    #f3f7fd;
+  --bg-muted:     #e4edf9;
+  --bg-input:     #f8fbff;
+  --bg-overlay:   rgba(148, 163, 184, 0.22);
 
-  --text-main:    #0f172a;
-  --text-dim:     #475569;
-  --text-muted:   #94a3b8;
+  --text-main:    #14233b;
+  --text-dim:     #526581;
+  --text-muted:   #8fa0ba;
+  --text-soft:    #6d7f9b;
 
-  --border-main:  #e2e8f0;
-  --border-muted: #cbd5e1;
-  --border-input: #e2e8f0;
+  --border-main:  rgba(148, 163, 184, 0.28);
+  --border-muted: rgba(148, 163, 184, 0.18);
+  --border-input: rgba(148, 163, 184, 0.34);
+  --border-strong:rgba(100, 116, 139, 0.34);
 
   --accent:       #2563eb;
-  --accent-bright:#3b82f6;
-  --accent-glow:  rgba(37,99,235,0.15);
+  --accent-bright:#3f83f8;
+  --accent-glow:  rgba(37,99,235,0.16);
   --accent-hover: #1d4ed8;
+  --accent-soft:  rgba(59,130,246,0.12);
 
   --color-success: #16a34a;
   --color-error:   #dc2626;
   --color-warn:    #d97706;
+  --shadow-soft:   0 24px 54px rgba(148, 163, 184, 0.22);
+  --shadow-panel:  0 18px 38px rgba(148, 163, 184, 0.18);
+  --contrast-surface:#0f172a;
+  --contrast-text: #ffffff;
 
-  --toggle-icon:   #0f172a;
-  --toggle-border: rgba(0,0,0,0.12);
-  --toggle-bg:     #e2e8f0;
+  --toggle-icon:   #14233b;
+  --toggle-border: rgba(37,99,235,0.16);
+  --toggle-bg:     rgba(255, 255, 255, 0.94);
 
   --sun-scale:    0;
   --moon-scale:   1;
+  color-scheme: light;
 }
 
 /* ── Base Reset ──────────────────────────────────────────── */
@@ -134,6 +156,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+html, body, #root {
+  min-height: 100%;
+}
+
 /* ── Screen-reader only ──────────────────────────────────── */
 .sr-only {
   position: absolute;
@@ -155,20 +181,101 @@ body {
   border: 2px solid var(--toggle-border);
   background: var(--toggle-bg);
   color: var(--toggle-icon);
+  box-shadow: var(--shadow-panel);
   transition: background 0.3s ease, border-color 0.3s ease, transform 0.2s ease;
 }
 .theme-toggle:hover { transform: scale(1.1); }
 
-.theme-toggle svg {
+.theme-toggle > span {
   grid-area: 1 / 1;
-  width: 20px; height: 20px;
-  transition: scale 0.4s ease, opacity 0.3s ease;
+  display: grid;
+  place-items: center;
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Sun: visible in dark mode (default) */
-.theme-toggle .icon-sun  { scale: var(--sun-scale);  opacity: var(--sun-scale);  }
+.theme-toggle .icon-sun  { transform: scale(var(--sun-scale)); opacity: var(--sun-scale); }
 /* Moon: visible in light mode */
-.theme-toggle .icon-moon { scale: var(--moon-scale); opacity: var(--moon-scale); }
+.theme-toggle .icon-moon { transform: scale(var(--moon-scale)); opacity: var(--moon-scale); }
+
+[data-theme="light"] .theme-toggle {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+[data-theme="light"] .bg-gray-950,
+[data-theme="light"] .bg-gray-950\/95 {
+  background-color: var(--bg-main) !important;
+}
+
+[data-theme="light"] .bg-gray-900,
+[data-theme="light"] .bg-gray-900\/80,
+[data-theme="light"] .bg-gray-900\/70,
+[data-theme="light"] .bg-gray-900\/60,
+[data-theme="light"] .bg-gray-900\/50 {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme="light"] .bg-gray-800,
+[data-theme="light"] .bg-gray-800\/90,
+[data-theme="light"] .bg-gray-800\/80,
+[data-theme="light"] .bg-gray-800\/50,
+[data-theme="light"] .bg-gray-800\/40 {
+  background-color: var(--bg-subtle) !important;
+}
+
+[data-theme="light"] .bg-gray-950\/40,
+[data-theme="light"] .bg-gray-950\/50 {
+  background-color: rgba(228, 237, 249, 0.78) !important;
+}
+
+[data-theme="light"] .border-gray-900,
+[data-theme="light"] .border-gray-800,
+[data-theme="light"] .border-gray-800\/80,
+[data-theme="light"] .border-gray-800\/50,
+[data-theme="light"] .border-gray-700,
+[data-theme="light"] .border-gray-700\/50 {
+  border-color: var(--border-main) !important;
+}
+
+[data-theme="light"] :is(div, h1, h2, h3, h4, h5, h6, p, span, label, li).text-white {
+  color: var(--text-main) !important;
+}
+
+[data-theme="light"] .text-gray-600,
+[data-theme="light"] .text-gray-500,
+[data-theme="light"] .text-gray-400,
+[data-theme="light"] .text-gray-300 {
+  color: var(--text-dim) !important;
+}
+
+[data-theme="light"] .placeholder\:text-gray-600::placeholder {
+  color: var(--text-soft) !important;
+}
+
+[data-theme="light"] .from-gray-950 {
+  --tw-gradient-from: var(--bg-page-from) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(248 251 255 / 0) var(--tw-gradient-to-position) !important;
+}
+
+[data-theme="light"] .via-gray-900 {
+  --tw-gradient-via: var(--bg-page-mid) var(--tw-gradient-via-position) !important;
+  --tw-gradient-to: rgb(221 232 251 / 0) var(--tw-gradient-to-position) !important;
+}
+
+[data-theme="light"] .to-blue-950 {
+  --tw-gradient-to: var(--bg-page-to) var(--tw-gradient-to-position) !important;
+}
+
+[data-theme="light"] .bg-black\/40,
+[data-theme="light"] .bg-black\/70 {
+  background-color: var(--bg-overlay) !important;
+}
 
 /* ══════════════════════════════════════════════════════════
    SIGN IN PAGE
@@ -197,13 +304,13 @@ body {
 }
 
 .signin-card {
-  background: rgba(11,22,40,0.85);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: none;
+  border: 1px solid var(--border-main);
   border-radius: 1.75rem;
   padding: 2.5rem 2rem;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(100,160,255,0.06);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(100,160,255,0.06);
   animation: fadeInUp 0.5s ease forwards;
   min-height: 600px;
   display: flex;
@@ -521,13 +628,13 @@ body {
   position: relative;
   width: 100%;
   max-width: 680px;
-  background: rgba(11, 22, 40, 0.88);
+  background: var(--bg-card);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: none;
+  border: 1px solid var(--border-main);
   border-radius: 1.75rem;
   padding: 2.5rem 2rem;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(100,160,255,0.06);
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(100,160,255,0.06);
   overflow: hidden;
 }
 
@@ -661,8 +768,8 @@ body {
   height: 48px;
   padding: 0 1rem;
   border-radius: 0.875rem;
-  border: 1px solid rgba(100,160,220,0.06);
-  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border-muted);
+  background: var(--bg-muted);
   color: var(--text-dim);
   font-size: 0.9rem;
   font-weight: 500;
@@ -678,7 +785,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-muted);
-  background: rgba(255,255,255,0.04);
+  background: var(--bg-subtle);
   padding: 0.2rem 0.5rem;
   border-radius: 999px;
   flex-shrink: 0;
@@ -732,4 +839,130 @@ body {
   cursor: pointer;
   transition: color 0.2s, background 0.2s;
 }
-.ftl-signout-btn:hover { color: var(--text-dim); background: rgba(255,255,255,0.03); }
+.ftl-signout-btn:hover { color: var(--text-dim); background: var(--bg-muted); }
+
+/* ── FTL Light Mode Specifics ── */
+[data-theme="light"] .ftl-card {
+  box-shadow: 0 20px 50px rgba(0,0,0,0.05);
+}
+[data-theme="light"] .ftl-error {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: #dc2626;
+}
+[data-theme="light"] .ftl-editable-tag {
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+}
+
+/* ══════════════════════════════════════════════════════════
+   LIGHT MODE — Dashboard.jsx hardcoded Tailwind overrides
+   These fix all the bg-gray-*, text-gray-*, border-gray-*
+   classes in the old Dashboard.jsx that don't use CSS vars.
+══════════════════════════════════════════════════════════ */
+
+/* Screen wrapper */
+[data-theme="light"] .from-gray-950.via-gray-900.to-blue-950,
+[data-theme="light"] .bg-gradient-to-br {
+  background: linear-gradient(135deg, var(--bg-page-from) 0%, var(--bg-page-mid) 50%, var(--bg-page-to) 100%) !important;
+}
+[data-theme="light"] .text-white {
+  color: var(--text-main) !important;
+}
+[data-theme="light"] .text-white\/90 {
+  color: var(--text-main) !important;
+}
+
+/* Card / panel backgrounds */
+[data-theme="light"] .bg-gray-900\/60,
+[data-theme="light"] .bg-gray-900\/70,
+[data-theme="light"] .bg-gray-900\/50 {
+  background-color: var(--bg-card) !important;
+}
+[data-theme="light"] .bg-gray-800\/90,
+[data-theme="light"] .bg-gray-800\/80,
+[data-theme="light"] .bg-gray-800\/70,
+[data-theme="light"] .bg-gray-800\/60,
+[data-theme="light"] .bg-gray-800\/50 {
+  background-color: var(--bg-subtle) !important;
+}
+[data-theme="light"] .bg-gray-800 {
+  background-color: var(--bg-subtle) !important;
+}
+[data-theme="light"] .bg-gray-950\/95 {
+  background-color: var(--bg-card) !important;
+}
+
+/* Borders */
+[data-theme="light"] .border-gray-800 {
+  border-color: var(--border-main) !important;
+}
+[data-theme="light"] .border-gray-700 {
+  border-color: var(--border-input) !important;
+}
+[data-theme="light"] .divide-gray-800 > * + * {
+  border-color: var(--border-main) !important;
+}
+
+/* Text */
+[data-theme="light"] .text-gray-400 {
+  color: var(--text-dim) !important;
+}
+[data-theme="light"] .text-gray-300 {
+  color: var(--text-dim) !important;
+}
+[data-theme="light"] .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+[data-theme="light"] .text-gray-200 {
+  color: var(--text-main) !important;
+}
+
+/* Input/select fields in Dashboard.jsx */
+[data-theme="light"] input.bg-gray-800\/90,
+[data-theme="light"] input:not([class*="signin"]):not([class*="ftl"]),
+[data-theme="light"] select:not([class*="signin"]):not([class*="ftl"]),
+[data-theme="light"] textarea {
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-input) !important;
+  color: var(--text-main) !important;
+}
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Hover states on buttons */
+[data-theme="light"] .hover\:bg-gray-700:hover {
+  background-color: var(--bg-muted) !important;
+}
+[data-theme="light"] .hover\:bg-gray-700\/50:hover {
+  background-color: var(--bg-muted) !important;
+}
+
+/* Profile drawer */
+[data-theme="light"] .bg-gray-950\/95 {
+  background-color: rgba(248, 251, 255, 0.97) !important;
+  backdrop-filter: blur(24px);
+}
+
+/* Quiz row AI-generated badge — keep special colors */
+[data-theme="light"] .bg-blue-800 {
+  background-color: rgba(37,99,235,0.15) !important;
+}
+[data-theme="light"] .border-blue-700 {
+  border-color: rgba(37,99,235,0.4) !important;
+}
+[data-theme="light"] .text-blue-200 {
+  color: #1d4ed8 !important;
+}
+
+/* Mode-switch pill background */
+[data-theme="light"] .bg-gray-800\/70.border-gray-700 {
+  background-color: var(--bg-muted) !important;
+  border-color: var(--border-main) !important;
+}
+
+/* Date input color-scheme — dark by default, light in light mode */
+input[type="date"] { color-scheme: dark; }
+[data-theme="light"] input[type="date"] { color-scheme: light; }

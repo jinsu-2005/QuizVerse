@@ -132,13 +132,13 @@ export default function QuizPage() {
   };
 
   if (loading) {
-    return <div className="min-h-screen grid place-items-center bg-gray-950 text-white">Loading Quiz...</div>;
+    return <div className="min-h-screen grid place-items-center bg-[var(--bg-main)] text-[var(--text-main)] transition-colors">Loading Quiz...</div>;
   }
   if (error || !quiz) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-950 text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-main)] text-[var(--text-main)] transition-colors">
         <h2 className="text-2xl font-bold mb-4">{error}</h2>
-        <button onClick={() => nav("/student")} className="bg-blue-600 px-4 py-2 rounded-lg">Go Back</button>
+        <button onClick={() => nav("/student")} className="bg-indigo-600 px-6 py-2 rounded-lg font-bold text-white shadow-lg shadow-indigo-500/20 active:scale-95 transition-all">Go Back</button>
       </div>
     );
   }
@@ -153,16 +153,16 @@ export default function QuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white p-4 flex flex-col md:p-8">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] p-4 flex flex-col md:p-8 transition-colors">
       {/* Header */}
       <div className="max-w-3xl mx-auto w-full mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold">{quiz.title}</h1>
-        <div className="flex items-center justify-between mt-4 bg-gray-900/50 p-4 rounded-xl border border-gray-800">
-          <div className="text-gray-400">
-            Question <span className="text-blue-400 font-bold">{currentIdx + 1}</span> of {quiz.questions.length}
+        <h1 className="text-2xl md:text-3xl font-bold text-[var(--text-main)] transition-colors">{quiz.title}</h1>
+        <div className="flex items-center justify-between mt-4 bg-[var(--bg-card)] p-4 rounded-xl border border-[var(--border-main)] transition-colors">
+          <div className="text-[var(--text-dim)]">
+            Question <span className="text-indigo-500 font-bold">{currentIdx + 1}</span> of {quiz.questions.length}
           </div>
           {timeLeft !== null && (
-            <div className={`font-mono text-xl ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-green-400'}`}>
+            <div className={`font-mono text-xl ${timeLeft <= 10 ? 'text-rose-500 animate-pulse' : 'text-emerald-500'}`}>
               <svg className="w-5 h-5 inline mr-2 -mt-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -172,9 +172,9 @@ export default function QuizPage() {
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full bg-gray-800 h-1.5 mt-4 rounded-full overflow-hidden">
+        <div className="w-full bg-[var(--bg-subtle)] h-1.5 mt-4 rounded-full overflow-hidden transition-colors">
           <div
-            className="bg-blue-600 h-full transition-all duration-300"
+            className="bg-indigo-600 h-full transition-all duration-300"
             style={{ width: `${((currentIdx + 1) / quiz.questions.length) * 100}%` }}
           />
         </div>
@@ -182,8 +182,8 @@ export default function QuizPage() {
 
       {/* Main Question Area */}
       <div className="max-w-3xl mx-auto w-full flex-grow flex flex-col">
-        <div className="bg-gray-900/60 backdrop-blur-md rounded-2xl border border-gray-700 p-6 md:p-8 shadow-2xl">
-          <h2 className="text-xl md:text-2xl font-medium leading-relaxed mb-8">{q.question}</h2>
+        <div className="bg-[var(--bg-card)] backdrop-blur-md rounded-2xl border border-[var(--border-main)] p-6 md:p-8 shadow-xl transition-colors">
+          <h2 className="text-xl md:text-2xl font-medium leading-relaxed mb-8 text-[var(--text-main)] transition-colors">{q.question}</h2>
 
           <div className="grid gap-3">
             {q.options.map((opt, i) => {
@@ -193,12 +193,12 @@ export default function QuizPage() {
                   key={i}
                   onClick={() => handleSelect(opt)}
                   className={`w-full text-left p-4 rounded-xl border transition-all duration-200 ${selected
-                    ? "border-blue-500 bg-blue-500/10 text-white shadow-[0_0_15px_rgba(59,130,246,0.2)]"
-                    : "border-gray-700 bg-gray-800/40 text-gray-300 hover:bg-gray-800 hover:border-gray-500"
+                    ? "border-indigo-600 bg-indigo-600/10 text-indigo-700 dark:text-indigo-300 shadow-md"
+                    : "border-[var(--border-main)] bg-[var(--bg-subtle)] text-[var(--text-dim)] hover:bg-[var(--bg-muted)] hover:border-[var(--border-strong)]"
                     }`}
                 >
                   <div className="flex items-center">
-                    <div className={`w-6 h-6 rounded-full border flex-shrink-0 flex items-center justify-center mr-4 ${selected ? 'border-blue-500 bg-blue-500' : 'border-gray-500'}`}>
+                    <div className={`w-6 h-6 rounded-full border flex-shrink-0 flex items-center justify-center mr-4 transition-all ${selected ? 'border-indigo-600 bg-indigo-600' : 'border-[var(--border-main)]'}`}>
                       {selected && <div className="w-2.5 h-2.5 rounded-full bg-white" />}
                     </div>
                     <span className="text-sm md:text-base">{opt}</span>
@@ -214,9 +214,9 @@ export default function QuizPage() {
           <button
             onClick={handlePrev}
             disabled={currentIdx === 0 || isPerQ}
-            className={`px-6 py-3 rounded-xl font-medium transition ${currentIdx === 0 || isPerQ
-              ? "bg-gray-800 text-gray-500 cursor-not-allowed opacity-50"
-              : "bg-gray-800 hover:bg-gray-700 text-white"
+            className={`px-6 py-3 rounded-xl font-medium transition-all ${currentIdx === 0 || isPerQ
+              ? "bg-[var(--bg-muted)] text-[var(--text-muted)] cursor-not-allowed opacity-50 border border-[var(--border-main)]"
+              : "bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] border border-[var(--border-main)]"
               }`}
           >
             Previous
@@ -226,7 +226,7 @@ export default function QuizPage() {
             <button
               onClick={handleSubmit}
               disabled={submitting || (!isPerQ && Object.keys(answers).length === 0)}
-              className="px-8 py-3 rounded-xl font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-900/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              className="px-8 py-3 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               {submitting ? "Submitting..." : "Submit Quiz"}
             </button>
@@ -234,7 +234,7 @@ export default function QuizPage() {
             <button
               onClick={handleNext}
               disabled={!answers[currentIdx] && !isPerQ} // Only require answer if not timed per-Q
-              className="px-8 py-3 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/30 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+              className="px-8 py-3 rounded-xl font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
             >
               Next Question
             </button>

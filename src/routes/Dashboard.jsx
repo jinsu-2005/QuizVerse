@@ -534,7 +534,7 @@ export default function TeacherDashboard() {
 
       {/* Mode Selection */}
       <div className="mt-6">
-        <div className="flex flex-wrap gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 bg-[var(--bg-subtle)] border border-[var(--border-main)] rounded-xl p-1 w-full sm:w-auto">
           {[
             { key: "ai", label: "AI Quiz Generator" },
             { key: "custom", label: "Custom Quiz Creator" }
@@ -544,7 +544,7 @@ export default function TeacherDashboard() {
               onClick={() => setCreateMode(mode.key)}
               className={`px-6 py-3 text-sm font-semibold rounded-lg transition-all duration-200 ${createMode === mode.key
                   ? "bg-blue-600 text-white shadow-lg"
-                  : "text-gray-300 hover:bg-gray-700"
+                  : "text-[var(--text-dim)] hover:bg-[var(--bg-muted)]"
                 }`}
             >
               {mode.label}
@@ -770,15 +770,15 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
       />
       {/* Drawer */}
       <div
-        className={`fixed top-0 right-0 h-[100dvh] w-full max-w-md transform bg-gray-950/95 backdrop-blur-xl border-l border-gray-800 transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-[100dvh] w-full max-w-md transform bg-[var(--bg-card)] backdrop-blur-xl border-l border-[var(--border-main)] transition-transform duration-300 ${open ? "translate-x-0" : "translate-x-full"
           }`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          <h3 className="text-lg font-semibold">Your Profile</h3>
+        <div className="flex items-center justify-between p-4 border-b border-[var(--border-main)]">
+          <h3 className="text-lg font-semibold text-[var(--text-main)]">Your Profile</h3>
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-3 py-1.5 hover:bg-gray-700 transition"
+            className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] px-3 py-1.5 transition"
           >
             Close
           </button>
@@ -803,8 +803,8 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
                     {uploading ? "Uploading…" : "Upload Photo"}
                   </button>
                   <button
-                    onClick={useGooglePhoto}
-                    className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 text-sm transition"
+                    onClick={() => useGooglePhoto()}
+                    className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] px-3 py-2 text-sm transition"
                   >
                     Use Google photo
                   </button>
@@ -846,7 +846,7 @@ function TeacherProfileDrawer({ open, onClose, initial }) {
               <div className="pt-2 flex justify-end gap-2">
                 <button
                   onClick={onClose}
-                  className="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition"
+                  className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-muted)] transition"
                 >
                   Cancel
                 </button>
@@ -879,17 +879,17 @@ function AiQuizSection({
 }) {
   return (
     <Section title="AI Quiz Forge">
-      <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-6">
+      <div className="relative overflow-hidden rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-6">
         <div className="pointer-events-none absolute -top-20 -right-20 h-56 w-56 rounded-full bg-blue-600/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-56 w-56 rounded-full bg-indigo-600/20 blur-3xl" />
 
         {/* Mode Switch */}
-        <div className="flex flex-wrap gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1 w-full sm:w-auto mb-5">
+        <div className="flex flex-wrap gap-2 bg-[var(--bg-muted)] border border-[var(--border-main)] rounded-xl p-1 w-full sm:w-auto mb-5">
           {["topic", "file"].map((m) => (
             <button
               key={m}
               onClick={() => setAiMode(m)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${aiMode === m ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-700"
+              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${aiMode === m ? "bg-blue-600 text-white" : "text-[var(--text-dim)] hover:bg-[var(--bg-subtle)]"
                 }`}
             >
               {m === "topic" ? "From Topic" : "From File"}
@@ -902,33 +902,33 @@ function AiQuizSection({
           <div className="lg:col-span-2 space-y-5">
             {aiMode === "topic" ? (
               <div>
-                <label className="mb-2 block text-xs font-medium text-gray-300">Topic</label>
+                <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Topic</label>
                 <input
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   placeholder="e.g., Data Structures (Stacks, Queues)"
-                  className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--text-muted)]"
                 />
               </div>
             ) : (
               <div className="space-y-3">
-                <label className="mb-2 block text-xs font-medium text-gray-300">Upload .txt or .csv</label>
+                <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Upload .txt or .csv</label>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="w-full cursor-pointer rounded-xl border-2 border-dashed border-gray-700 bg-gray-800/60 px-4 py-6 text-center hover:border-blue-500 transition"
+                  className="w-full cursor-pointer rounded-xl border-2 border-dashed border-[var(--border-main)] bg-[var(--bg-subtle)] px-4 py-6 text-center hover:border-blue-500 transition"
                 >
-                  <div className="text-sm text-gray-400">{file ? file.name : "Click to choose a file"}</div>
-                  <div className="text-[11px] text-gray-500">Max few hundred KB recommended</div>
+                  <div className="text-sm text-[var(--text-dim)]">{file ? file.name : "Click to choose a file"}</div>
+                  <div className="text-[11px] text-[var(--text-muted)]">Max few hundred KB recommended</div>
                 </div>
                 <input ref={fileRef} type="file" className="hidden" accept=".txt,.csv" onChange={onPickFile} />
                 <div>
-                  <label className="mb-2 block text-xs font-medium text-gray-300">Instruction</label>
+                  <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Instruction</label>
                   <textarea
                     rows={3}
                     value={instruction}
                     onChange={(e) => setInstruction(e.target.value)}
                     placeholder="E.g., Create 8 MCQs focusing on key definitions and examples."
-                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--text-muted)]"
                   />
                 </div>
               </div>
@@ -958,14 +958,14 @@ function AiQuizSection({
             </div>
 
             <div>
-              <label className="mb-2 block text-xs font-medium text-gray-300">Timer</label>
-              <div className="grid grid-cols-3 gap-2 bg-gray-800/70 border border-gray-700 rounded-xl p-1">
+              <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Timer</label>
+              <div className="grid grid-cols-3 gap-2 bg-[var(--bg-muted)] border border-[var(--border-main)] rounded-xl p-1">
                 {["off", "perQuestion", "total"].map((t) => (
                   <button
                     key={t}
                     type="button"
                     onClick={() => setTimerMode(t)}
-                    className={`py-2 text-sm font-semibold rounded-md transition-colors ${timerMode === t ? "bg-blue-600 text-white" : "text-gray-300 hover:bg-gray-700"
+                    className={`py-2 text-sm font-semibold rounded-md transition-colors ${timerMode === t ? "bg-blue-600 text-white" : "text-[var(--text-dim)] hover:bg-[var(--bg-subtle)]"
                       }`}
                   >
                     {t === "perQuestion" ? "Per Question" : t === "total" ? "Total Quiz" : "Off"}
@@ -975,25 +975,25 @@ function AiQuizSection({
 
               {timerMode === "perQuestion" && (
                 <div className="mt-2">
-                  <label className="mb-2 block text-xs font-medium text-gray-300">Seconds per Question (≥ 10)</label>
+                  <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Seconds per Question (≥ 10)</label>
                   <input
                     type="number"
                     min={10}
                     value={timeValue}
                     onChange={(e) => setTimeValue(Math.max(10, Number(e.target.value)))}
-                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
               {timerMode === "total" && (
                 <div className="mt-2">
-                  <label className="mb-2 block text-xs font-medium text-gray-300">Total Minutes (≥ 1)</label>
+                  <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">Total Minutes (≥ 1)</label>
                   <input
                     type="number"
                     min={1}
                     value={timeValue}
                     onChange={(e) => setTimeValue(Math.max(1, Number(e.target.value)))}
-                    className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               )}
@@ -1001,14 +1001,14 @@ function AiQuizSection({
           </div>
 
           <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5 flex flex-col gap-3">
-              <div className="text-sm text-gray-300">AI will create:</div>
-              <div className="text-3xl font-extrabold">
-                {numQuestions}<span className="text-gray-400 text-base ml-1">questions</span>
+            <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-5 flex flex-col gap-3">
+              <div className="text-sm text-[var(--text-dim)]">AI will create:</div>
+              <div className="text-3xl font-extrabold text-[var(--text-main)]">
+                {numQuestions}<span className="text-[var(--text-dim)] text-base ml-1">questions</span>
               </div>
-              <div className="text-sm text-gray-400">with {numOptions} options each</div>
-              <div className="text-sm text-gray-400">Difficulty: <span className="text-gray-200 font-semibold">{difficulty}</span></div>
-              <div className="text-xs text-gray-500">
+              <div className="text-sm text-[var(--text-dim)]">with {numOptions} options each</div>
+              <div className="text-sm text-[var(--text-dim)]">Difficulty: <span className="text-[var(--text-main)] font-semibold">{difficulty}</span></div>
+              <div className="text-xs text-[var(--text-muted)]">
                 Timer: {timerMode === "off" ? "Off" :
                   timerMode === "perQuestion" ? `${timeValue}s / question` : `${timeValue}m total`
                 }
@@ -1041,7 +1041,7 @@ function CustomQuizSection({
 }) {
   return (
     <Section title="Create Custom Quiz">
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5">
+      <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-5">
         {/* Top badges */}
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <Badge>{profile?.institute || "Your Institute"}</Badge>
@@ -1081,12 +1081,12 @@ function CustomQuizSection({
 
           {/* Questions */}
           <div className="mt-2 space-y-5">
-            <div className="text-sm text-gray-400">Questions</div>
+            <div className="text-sm text-[var(--text-dim)]">Questions</div>
 
             {questions.map((q, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-gray-800 bg-gray-900/60 p-4 relative"
+                className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-subtle)] p-4 relative"
               >
                 {/* remove */}
                 <button
@@ -1109,13 +1109,13 @@ function CustomQuizSection({
                 <div className="mt-3 grid sm:grid-cols-2 gap-3">
                   {q.options.map((opt, oi) => (
                     <div key={oi} className="relative">
-                      <label className="mb-2 block text-xs font-medium text-gray-300 tracking-wide">
+                      <label className="mb-2 block text-xs font-medium text-[var(--text-dim)] tracking-wide">
                         Option {String.fromCharCode(65 + oi)}
                       </label>
                       <input
                         value={opt}
                         onChange={(e) => updateOption(i, oi, e.target.value)}
-                        className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder={`Option ${String.fromCharCode(65 + oi)}`}
                       />
                       <button
@@ -1123,7 +1123,7 @@ function CustomQuizSection({
                         onClick={() => updateQuestion(i, { answerIndex: oi })}
                         className={`absolute right-2 top-8 rounded-md px-2 py-1 text-xs font-semibold border ${q.answerIndex === oi
                             ? "bg-emerald-600/80 border-emerald-500 text-white"
-                            : "bg-gray-800/70 border-gray-700 text-gray-300 hover:bg-gray-700"
+                            : "bg-[var(--bg-subtle)] border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-muted)]"
                           }`}
                         title="Mark as correct"
                       >
@@ -1149,7 +1149,7 @@ function CustomQuizSection({
             <div className="flex justify-between items-center">
               <button
                 onClick={addQuestion}
-                className="rounded-lg bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm border border-gray-700"
+                className="rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] px-4 py-2 text-sm border border-[var(--border-main)]"
               >
                 + Add another question
               </button>
@@ -1179,7 +1179,7 @@ function QuizListSection({
   busyList, filtered, onDelete, onDuplicate, onEdit
 }) {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-900/70 backdrop-blur-xl p-5">
+    <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] backdrop-blur-xl p-5">
       {/* Filters */}
       <div className="grid md:grid-cols-5 gap-3">
         <InputSmall
@@ -1209,7 +1209,7 @@ function QuizListSection({
             setFilterYear("");
             setSearch("");
           }}
-          className="rounded-lg bg-gray-800 hover:bg-gray-700 text-sm border border-gray-700"
+          className="rounded-lg bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] text-sm border border-[var(--border-main)]"
         >
           Reset
         </button>
@@ -1248,15 +1248,15 @@ function AiQuizPreviewSection({
 }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 text-xl font-semibold text-white/90">
+      <h2 className="mb-3 text-xl font-semibold text-[var(--text-main)]">
         Preview & Edit ({aiQuiz.questions.length} items)
       </h2>
 
-      <div className="rounded-2xl border border-gray-800 bg-gray-900/60 overflow-hidden">
-        <div className="px-4 py-3 text-xs text-gray-400 border-b border-gray-800 flex items-center justify-between">
+      <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] overflow-hidden">
+        <div className="px-4 py-3 text-xs text-[var(--text-dim)] border-b border-[var(--border-main)] flex items-center justify-between">
           <div>
-            Topic: <span className="text-gray-200">{aiQuiz.meta.topic}</span> •
-            Difficulty: <span className="text-gray-200">{aiQuiz.meta.difficulty}</span>
+            Topic: <span className="text-[var(--text-main)]">{aiQuiz.meta.topic}</span> •
+            Difficulty: <span className="text-[var(--text-main)]">{aiQuiz.meta.difficulty}</span>
           </div>
           <div className="text-[11px]">
             Timer: {aiQuiz.meta.timer.mode === "off" ? "Off" :
@@ -1268,7 +1268,7 @@ function AiQuizPreviewSection({
           {aiQuiz.questions.map((q, i) => (
             <div key={i} className="p-4 md:p-5">
               <div className="flex justify-between items-start gap-3">
-                <div className="font-semibold text-sm text-gray-300">Q{i + 1}</div>
+                <div className="font-semibold text-sm text-[var(--text-dim)]">Q{i + 1}</div>
                 <button
                   onClick={() => removeAiQuestion(i)}
                   className="rounded-md border border-red-800/60 bg-red-900/30 px-2 py-1 text-xs text-red-200 hover:bg-red-900/50"
@@ -1282,7 +1282,7 @@ function AiQuizPreviewSection({
                 value={q.question}
                 onChange={(e) => updateAiQuestion(i, { question: e.target.value })}
                 rows={2}
-                className="mt-2 w-full rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-2 w-full rounded-lg border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
               />
 
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
@@ -1291,13 +1291,13 @@ function AiQuizPreviewSection({
                     <input
                       value={opt}
                       onChange={(e) => updateAiOption(i, oi, e.target.value)}
-                      className="flex-1 rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 rounded-lg border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <button
                       onClick={() => updateAiQuestion(i, { answerIndex: oi })}
                       className={`rounded-md px-2 py-1 text-xs border ${q.answerIndex === oi
                           ? "bg-green-700/40 border-green-500 text-green-200"
-                          : "bg-gray-800/60 border-gray-700 text-gray-300 hover:bg-gray-700"
+                          : "bg-[var(--bg-subtle)] border-[var(--border-main)] text-[var(--text-dim)] hover:bg-[var(--bg-muted)]"
                         }`}
                       title="Mark as correct"
                     >
@@ -1313,17 +1313,17 @@ function AiQuizPreviewSection({
                   onChange={(e) => updateAiQuestion(i, { explanation: e.target.value })}
                   rows={2}
                   placeholder="Explanation (optional)"
-                  className="w-full rounded-lg border border-gray-700 bg-gray-800/80 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-lg border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--text-muted)]"
                 />
               </div>
             </div>
           ))}
         </div>
 
-        <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-gray-800">
+        <div className="flex items-center justify-end gap-3 px-4 py-3 border-t border-[var(--border-main)]">
           <button
             onClick={() => setAiQuiz(null)}
-            className="rounded-lg border border-gray-700 bg-gray-800 px-4 py-2 text-sm text-gray-200 hover:bg-gray-700 transition"
+            className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] px-4 py-2 text-sm text-[var(--text-main)] hover:bg-[var(--bg-muted)] transition"
           >
             Discard
           </button>
@@ -1344,7 +1344,8 @@ function AiQuizPreviewSection({
 
 function Screen({ children }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950 text-white p-4 md:p-6">
+    <div className="min-h-screen bg-[var(--bg-main)] text-[var(--text-main)] p-4 md:p-6 transition-colors duration-300"
+         style={{ background: "linear-gradient(135deg, var(--bg-page-from) 0%, var(--bg-page-mid) 50%, var(--bg-page-to) 100%)" }}>
       <div className="mx-auto max-w-7xl">
         <div className="pointer-events-none fixed -top-24 -left-24 h-64 w-64 rounded-full bg-blue-600/20 blur-3xl" />
         <div className="pointer-events-none fixed -bottom-24 -right-24 h-64 w-64 rounded-full bg-indigo-600/20 blur-3xl" />
@@ -1373,7 +1374,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
         <div className="grid h-11 w-11 place-items-center rounded-xl bg-amber-600 font-bold">Q</div>
         <div>
           <h1 className="text-2xl sm:text-3xl font-extrabold">Teacher Dashboard</h1>
-          <p className="text-gray-400 text-sm">
+          <p className="text-[var(--text-dim)] text-sm">
             Hello {fbUser?.displayName || profile?.name || fbUser?.email}
           </p>
         </div>
@@ -1383,7 +1384,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
       <div className="flex items-center gap-3">
         <button
           onClick={doLogout}
-          className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 text-sm"
+          className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] text-[var(--text-main)] px-3 py-1.5 text-sm"
           title="Log out"
         >
           Logout
@@ -1391,7 +1392,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
 
         <button
           onClick={onOpenProfile}
-          className="group relative rounded-full p-1 border border-gray-700 bg-gray-800 hover:bg-gray-700 transition"
+          className="group relative rounded-full p-1 border border-[var(--border-main)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] transition"
           title="Profile & Settings"
         >
           <img
@@ -1405,7 +1406,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
             alt="avatar"
             className="h-10 w-10 rounded-full object-cover"
           />
-          <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-gray-400 opacity-0 group-hover:opacity-100 transition">
+          <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-[var(--text-dim)] opacity-0 group-hover:opacity-100 transition">
             Edit
           </span>
         </button>
@@ -1418,7 +1419,7 @@ function Header({ profile, fbUser, onOpenProfile }) {
 function Section({ title, children }) {
   return (
     <div>
-      <h2 className="mb-3 text-xl font-semibold text-white/90">{title}</h2>
+      <h2 className="mb-3 text-xl font-semibold text-[var(--text-main)]/90">{title}</h2>
       {children}
     </div>
   );
@@ -1426,8 +1427,8 @@ function Section({ title, children }) {
 
 function Pill({ label, value }) {
   return (
-    <div className="rounded-full border border-gray-700 bg-gray-800/70 px-3 py-1 text-xs text-gray-200">
-      <span className="text-gray-400">{label}:</span>{" "}
+    <div className="rounded-full border border-[var(--border-main)] bg-[var(--bg-subtle)] px-3 py-1 text-xs text-[var(--text-main)]">
+      <span className="text-[var(--text-dim)]">{label}:</span>{" "}
       <span className="font-semibold">{value}</span>
     </div>
   );
@@ -1435,7 +1436,7 @@ function Pill({ label, value }) {
 
 function Badge({ children }) {
   return (
-    <span className="px-2 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-200">
+    <span className="px-2 py-1 rounded-full bg-[var(--bg-subtle)] border border-[var(--border-main)] text-xs text-[var(--text-dim)]">
       {children}
     </span>
   );
@@ -1444,13 +1445,14 @@ function Badge({ children }) {
 function Field({ label, value, onChange, placeholder, type = "text" }) {
   return (
     <div className="flex flex-col">
-      <label className="mb-2 text-xs font-medium text-gray-300 tracking-wide">{label}</label>
+      <label className="mb-2 text-xs font-medium text-[var(--text-dim)] tracking-wide">{label}</label>
       <input
         type={type}
         value={value || ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={`rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none transition-all focus:ring-2 focus:ring-blue-500 ${type === "date" ? "[color-scheme:dark]" : ""}`}
+        className={`rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none transition-all focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--text-muted)]`}
+        style={type === "date" ? { colorScheme: "var(--color-scheme, dark)" } : {}}
       />
     </div>
   );
@@ -1459,7 +1461,7 @@ function Field({ label, value, onChange, placeholder, type = "text" }) {
 function NumberField({ label, value, onChange, min, max, onBlur }) { // Added onBlur
   return (
     <div>
-      <label className="mb-2 block text-xs font-medium text-gray-300">{label}</label>
+      <label className="mb-2 block text-xs font-medium text-[var(--text-dim)]">{label}</label>
       <input
         type="number"
         min={min}
@@ -1467,7 +1469,7 @@ function NumberField({ label, value, onChange, min, max, onBlur }) { // Added on
         value={value}
         onChange={(e) => onChange(e.target.value)} // Pass the raw value
         onBlur={onBlur} // Pass onBlur to the input
-        className="w-full rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-blue-500"
       />
     </div>
   );
@@ -1480,12 +1482,12 @@ function Select({ label, value, onChange, options, renderOption }) {
 
   return (
     <div className="flex flex-col">
-      <label className="mb-2 text-xs font-medium text-gray-300 tracking-wide">{label}</label>
+      <label className="mb-2 text-xs font-medium text-[var(--text-dim)] tracking-wide">{label}</label>
       <div className="relative">
         <select
           value={value || ""}
           onChange={(e) => onChange(e.target.value)}
-          className="appearance-none rounded-xl border border-gray-700 bg-gray-800/90 px-4 py-3 pr-12 text-[15px] outline-none focus:ring-2 focus:ring-blue-500 w-full"
+          className="appearance-none rounded-xl border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-4 py-3 pr-12 text-[15px] outline-none focus:ring-2 focus:ring-blue-500 w-full"
         >
           <option value="">{`Select ${label.toLowerCase()}`}</option>
           {normalized.map((o) => (
@@ -1496,7 +1498,7 @@ function Select({ label, value, onChange, options, renderOption }) {
         </select>
         <div className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 opacity-70">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path d="M7 10l5 5 5-5" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
       </div>
@@ -1510,7 +1512,7 @@ function InputSmall({ value, onChange, placeholder }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
-      className="rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+      className="rounded-lg border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-[var(--text-muted)]"
     />
   );
 }
@@ -1521,7 +1523,7 @@ function SelectSmall({ value, onChange, options }) {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="appearance-none w-full rounded-lg border border-gray-700 bg-gray-800/90 px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+        className="appearance-none w-full rounded-lg border border-[var(--border-input)] bg-[var(--bg-input)] text-[var(--text-main)] px-3 py-2 pr-10 text-sm outline-none focus:ring-2 focus:ring-blue-500"
       >
         {options.map((o) => (
           <option key={o.value} value={o.value}>
@@ -1531,7 +1533,7 @@ function SelectSmall({ value, onChange, options }) {
       </select>
       <div className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 opacity-70">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-          <path d="M7 10l5 5 5-5" stroke="#cbd5e1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M7 10l5 5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       </div>
     </div>
@@ -1540,7 +1542,7 @@ function SelectSmall({ value, onChange, options }) {
 
 function Empty({ text }) {
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/60 p-6 text-gray-400 text-sm">
+    <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-[var(--text-dim)] text-sm">
       {text}
     </div>
   );
@@ -1548,9 +1550,9 @@ function Empty({ text }) {
 
 function RowSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-gray-900/50 p-5 animate-pulse">
-      <div className="h-4 w-1/3 bg-gray-800 rounded" />
-      <div className="mt-3 h-4 w-1/2 bg-gray-800 rounded" />
+    <div className="rounded-2xl border border-[var(--border-main)] bg-[var(--bg-card)] p-5 animate-pulse">
+      <div className="h-4 w-1/3 bg-[var(--bg-subtle)] rounded" />
+      <div className="mt-3 h-4 w-1/2 bg-[var(--bg-subtle)] rounded" />
     </div>
   );
 }
@@ -1598,13 +1600,13 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
   };
 
   return (
-    <div className="rounded-xl border border-gray-800 bg-gray-900/60">
+    <div className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)]">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-lg font-bold">{quiz.title}</h3>
-            <span className="rounded-full border border-gray-700 bg-gray-800 px-2 py-0.5 text-[11px] text-gray-300">
+            <h3 className="text-lg font-bold text-[var(--text-main)]">{quiz.title}</h3>
+            <span className="rounded-full border border-[var(--border-main)] bg-[var(--bg-subtle)] px-2 py-0.5 text-[11px] text-[var(--text-dim)]">
               {quiz.department} • {quiz.academicYear}
             </span>
             {quiz.sourceMode && (
@@ -1613,8 +1615,8 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
               </span>
             )}
           </div>
-          <p className="text-sm text-gray-400 mt-1">{quiz.description || "—"}</p>
-          <div className="mt-1 text-xs text-gray-500">
+          <p className="text-sm text-[var(--text-dim)] mt-1">{quiz.description || "—"}</p>
+          <div className="mt-1 text-xs text-[var(--text-muted)]">
             Created {fmtDate(quiz.createdAt)}
           </div>
         </div>
@@ -1629,7 +1631,7 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
           </button>
           <button
             onClick={() => onDuplicate(quiz)}
-            className="rounded-lg border border-gray-700 bg-gray-800 hover:bg-gray-700 px-3 py-1.5 text-sm"
+            className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-muted)] px-3 py-1.5 text-sm text-[var(--text-main)]"
             title="Duplicate"
           >
             Duplicate
@@ -1657,7 +1659,7 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
           }`}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-gray-800 p-4 grid sm:grid-cols-4 gap-4">
+          <div className="border-t border-[var(--border-main)] p-4 grid sm:grid-cols-4 gap-4">
             {stats.loading ? (
               <>
                 <SkeletonChip />
@@ -1682,18 +1684,18 @@ function QuizRow({ quiz, onDelete, onDuplicate, onEdit }) {
 
 function KPI({ label, value }) {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/70 p-4">
-      <div className="text-xs text-gray-400">{label}</div>
-      <div className="mt-1 text-xl font-extrabold">{value}</div>
+    <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+      <div className="text-xs text-[var(--text-dim)]">{label}</div>
+      <div className="mt-1 text-xl font-extrabold text-[var(--text-main)]">{value}</div>
     </div>
   );
 }
 
 function SkeletonChip() {
   return (
-    <div className="rounded-lg border border-gray-800 bg-gray-900/70 p-4 animate-pulse">
-      <div className="h-3 w-16 bg-gray-800 rounded" />
-      <div className="mt-2 h-6 w-12 bg-gray-800 rounded" />
+    <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-4 animate-pulse">
+      <div className="h-3 w-16 bg-[var(--bg-subtle)] rounded" />
+      <div className="mt-2 h-6 w-12 bg-[var(--bg-subtle)] rounded" />
     </div>
   );
 }

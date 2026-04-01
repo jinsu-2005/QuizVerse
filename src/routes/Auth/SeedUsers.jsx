@@ -8,27 +8,12 @@ import {
 
 const TEST_USERS = [
   {
-    email:    "jinsu.j2005@gmail.com",
-    password: "Jinsu@2005",
+    email:    "jinsu.j@quizverse.com",
+    password: "admin@2005",
     data: {
-      name:       "Test Student",
-      role:       "student",
-      regNo:      "961823205032",   // stored as STRING
-      department: "IT",
-      institute:  "Ponjesly College of Engineering",
-      verified:   false,
-    },
-  },
-  {
-    email:    "jinsukapgreen@gmail.com",
-    password: "Student@Ponjesly",
-    data: {
-      name:       "Test Faculty",
-      role:       "teacher",
-      collegeId:  "961820501",      // stored as STRING
-      department: "CSE",
-      institute:  "Ponjesly College of Engineering",
-      verified:   false,
+      name:       "Super Admin (Jinsu)",
+      role:       "super_admin",
+      verified:   true,
     },
   },
 ];

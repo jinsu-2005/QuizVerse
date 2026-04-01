@@ -98,7 +98,7 @@ export function CreateQuizSection({
                       <Field label="Short Description" value={form.description} onChange={v => setForm({ ...form, description: v })} placeholder="Provide context for students..." />
                    </div>
                    <div className="grid md:grid-cols-3 gap-6">
-                      <Select label="Instructor Department" value={form.department} onChange={v => setForm({ ...form, department: v })} options={[ {label:"IT",value:"IT"}, {label:"CSE",value:"CSE"}, {label:"ECE",value:"ECE"}, {label:"EEE",value:"EEE"}, {label:"MECH",value:"MECH"}, {label:"CIVIL",value:"CIVIL"}, {label:"AIDS",value:"AIDS"}, {label:"AIML",value:"AIML"} ]} renderOption={o=>o.label} />
+                      <Select label="Instructor Department" value={form.department} onChange={v => setForm({ ...form, department: v })} options={[ {label:"FY",value:"FY"}, {label:"IT",value:"IT"}, {label:"CSE",value:"CSE"}, {label:"ECE",value:"ECE"}, {label:"EEE",value:"EEE"}, {label:"MECH",value:"MECH"}, {label:"CIVIL",value:"CIVIL"}, {label:"AIDS",value:"AIDS"}, {label:"AIML",value:"AIML"} ]} renderOption={o=>o.label} />
                       <Select label="Target Academic Cycle" value={form.academicYear} onChange={v => setForm({ ...form, academicYear: v })} options={["2022 - 2026", "2023 - 2027", "2024 - 2028", "2025 - 2029"].map(y => ({ value: y, text: y }))} />
                       <Select label="Subject Difficulty" value={difficulty} onChange={setDifficulty} options={["Easy", "Moderate", "Hard"]} />
                    </div>
@@ -150,7 +150,7 @@ export function CreateQuizSection({
                    </div>
                 </div>
 
-                <button type="submit" disabled={aiLoading} className="w-full h-16 rounded-2xl bg-indigo-600 hover:bg-slate-900 dark:hover:bg-slate-100 dark:hover:text-slate-900 shadow-xl shadow-indigo-500/10 text-white font-bold text-base uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4">
+                <button type="submit" disabled={aiLoading} className="w-full h-16 rounded-2xl bg-indigo-600 hover:opacity-95 shadow-xl shadow-indigo-500/10 text-white font-bold text-base uppercase tracking-widest transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 flex items-center justify-center gap-4">
                    {aiLoading ? (
                       <>
                         <div className="w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin" />
@@ -218,7 +218,7 @@ export function CreateQuizSection({
                       ))}
                    </div>
 
-                   <button onClick={handleNext} className={`w-16 h-16 rounded-2xl text-2xl flex items-center justify-center transition-all shadow-lg group ${isCurrentQValid ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:scale-105 active:scale-95" : "bg-[var(--bg-subtle)] text-[var(--text-dim)] border border-[var(--border-main)]"}`}>
+                   <button onClick={handleNext} className={`w-16 h-16 rounded-2xl text-2xl flex items-center justify-center transition-all shadow-lg group ${isCurrentQValid ? "bg-[var(--contrast-surface)] text-[var(--contrast-text)] hover:scale-105 active:scale-95" : "bg-[var(--bg-subtle)] text-[var(--text-dim)] border border-[var(--border-main)]"}`}>
                       <span className="group-hover:translate-x-1 transition-transform">→</span>
                    </button>
                 </div>
@@ -226,7 +226,7 @@ export function CreateQuizSection({
                 <div className="hidden lg:flex justify-end gap-4 border-t border-[var(--border-main)] pt-8 mt-4 transition-colors">
                    {editingId && <button onClick={cancelEdit} className="px-8 py-3 rounded-xl font-bold text-[var(--text-dim)] hover:text-[var(--text-main)]">Cancel Override</button>}
                    <button onClick={() => saveQuiz("draft")} className="px-8 py-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-main)] text-[var(--text-main)] font-bold hover:bg-[var(--bg-card)] transition-all">Save as Draft Record</button>
-                   <button onClick={() => saveQuiz("published")} disabled={busyCreate} className="px-10 py-3 rounded-xl bg-indigo-600 hover:bg-slate-900 text-white font-bold shadow-xl shadow-indigo-500/10 transition-all active:scale-95 disabled:bg-[var(--bg-subtle)] disabled:text-[var(--text-dim)]">Publish to System</button>
+                   <button onClick={() => saveQuiz("published")} disabled={busyCreate} className="px-10 py-3 rounded-xl bg-indigo-600 hover:opacity-95 text-white font-bold shadow-xl shadow-indigo-500/10 transition-all active:scale-95 disabled:bg-[var(--bg-subtle)] disabled:text-[var(--text-dim)]">Publish to System</button>
                 </div>
             </div>
           )}
@@ -271,7 +271,7 @@ export function CreateQuizSection({
                         <div className="text-sm font-bold text-[var(--text-main)] leading-relaxed italic pr-4">{bq.question}</div>
                         <div className="flex justify-between items-center pt-4 border-t border-[var(--border-main)]">
                            <Badge variant="indigo">{bq.department || "General"}</Badge>
-                           <button onClick={() => handleImportBank(bq)} className="px-6 py-2 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm">Insert to Editor</button>
+                           <button onClick={() => handleImportBank(bq)} className="px-6 py-2 bg-[var(--contrast-surface)] text-[var(--contrast-text)] rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-sm">Insert to Editor</button>
                         </div>
                      </div>
                   ))

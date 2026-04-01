@@ -25,6 +25,7 @@ export function QuizListSection({
                  onChange={setFilterDept}
                  options={[
                     { value: "", text: "All Recorded Depts" },
+                    { value: "FY", text: "FY (First Year)" },
                     { value: "IT", text: "IT" },
                     { value: "CSE", text: "CSE" },
                     { value: "ECE", text: "ECE" },
